@@ -22,21 +22,20 @@ const CARD_SHADOW =
 
 const SECTION_MIN_H = "min-h-[calc(100vh-10.5rem)]"
 
-// Colors as constants for recharts - Linen/Taupe editorial palette
+// Colors as constants for recharts - CBK editorial palette (white on linen)
 const C = {
-  charcoal: "oklch(0.25 0.015 60)",
-  charcoalLight: "oklch(0.35 0.015 60)",
-  taupe: "oklch(0.55 0.04 75)",
-  taupeLight: "oklch(0.65 0.035 80)",
-  stone: "oklch(0.45 0.025 60)",
-  cream: "oklch(0.70 0.025 70)",
-  gain: "oklch(0.50 0.10 155)",
-  loss: "oklch(0.50 0.12 25)",
-  grid: "oklch(0.68 0.025 75)",
-  tick: "oklch(0.45 0.020 60)",
-  surface: "oklch(0.78 0.025 75)",
-  gold: "oklch(0.65 0.10 85)",
-  warmGray: "oklch(0.58 0.02 70)",
+  white: "oklch(0.98 0 0)",
+  whiteMuted: "oklch(0.92 0.01 70)",
+  linen: "oklch(0.72 0.035 70)",
+  linenDark: "oklch(0.62 0.040 70)",
+  taupe: "oklch(0.55 0.04 70)",
+  charcoal: "oklch(0.35 0.03 70)",
+  gain: "oklch(0.65 0.12 155)",
+  loss: "oklch(0.55 0.12 25)",
+  grid: "oklch(0.58 0.038 70)",
+  tick: "oklch(0.85 0.02 70)",
+  surface: "oklch(0.68 0.038 70)",
+  gold: "oklch(0.75 0.12 85)",
 }
 
 const SPRING = { type: "spring" as const, stiffness: 400, damping: 32 }
@@ -81,12 +80,12 @@ const documentVolumeData = [
 ]
 
 const caseDistribution = [
-  { name: "Wage Theft", value: 22, color: C.charcoal },
-  { name: "Consumer Fraud", value: 18, color: C.taupe },
-  { name: "Housing", value: 14, color: C.stone },
-  { name: "Employment", value: 28, color: C.charcoalLight },
-  { name: "Civil Rights", value: 12, color: C.taupeLight },
-  { name: "Other", value: 6, color: C.cream },
+  { name: "Wage Theft", value: 22, color: C.white },
+  { name: "Consumer Fraud", value: 18, color: C.whiteMuted },
+  { name: "Housing", value: 14, color: C.taupe },
+  { name: "Employment", value: 28, color: C.linenDark },
+  { name: "Civil Rights", value: 12, color: C.charcoal },
+  { name: "Other", value: 6, color: C.linen },
 ]
 
 const anomalyAlerts = [
@@ -181,23 +180,23 @@ function KpiCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay, ease: EASE_OUT }}
-      className="relative overflow-hidden rounded bg-card border border-border p-4 lg:p-5 shadow-linen"
+      className="relative overflow-hidden border-b border-foreground/20 p-5 lg:p-6"
     >
-      <p className="text-[10px] font-medium tracking-widest uppercase text-muted-foreground mb-3 font-sans">
+      <p className="text-[10px] font-medium tracking-[0.2em] uppercase text-foreground/60 mb-4 font-sans">
         {label}
       </p>
-      <p className="text-2xl lg:text-3xl font-semibold text-foreground font-display tracking-tight leading-none">
+      <p className="text-3xl lg:text-4xl font-normal text-foreground font-display tracking-tight leading-none">
         {prefix}{value}{suffix}
       </p>
       {change !== undefined && (
-        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
-          <div className={`flex items-center gap-0.5 text-xs font-medium font-mono ${
+        <div className="flex items-center gap-3 mt-4">
+          <div className={`flex items-center gap-1 text-xs font-medium font-mono ${
             isPositive ? "text-fin-gain" : "text-fin-loss"
           }`}>
             {isPositive ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
             {isPositive ? "+" : ""}{change}%
           </div>
-          <span className="text-[10px] text-muted-foreground font-sans">vs last month</span>
+          <span className="text-[10px] text-foreground/50 font-sans tracking-wide">vs last month</span>
         </div>
       )}
     </motion.div>
@@ -227,13 +226,13 @@ function MiniSparkline({ data, color, height = 32 }: { data: number[]; color: st
 function ChartTooltipContent({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; name: string; color: string }>; label?: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded bg-card border border-border p-3 text-xs shadow-linen">
-      <p className="text-muted-foreground mb-2 font-medium text-[10px] uppercase tracking-widest font-sans">{label}</p>
+    <div className="bg-foreground text-background p-4 text-xs">
+      <p className="text-background/70 mb-3 font-medium text-[9px] uppercase tracking-[0.2em] font-sans">{label}</p>
       {payload.map((entry, i) => (
-        <div key={i} className="flex items-center gap-2 py-0.5">
-          <div className="size-2 rounded-sm" style={{ backgroundColor: entry.color }} />
-          <span className="text-muted-foreground capitalize font-sans">{entry.name}:</span>
-          <span className="font-mono font-medium text-foreground">{typeof entry.value === "number" ? entry.value.toLocaleString() : entry.value}</span>
+        <div key={i} className="flex items-center gap-2.5 py-0.5">
+          <div className="size-2" style={{ backgroundColor: entry.color }} />
+          <span className="text-background/70 capitalize font-sans text-[10px]">{entry.name}</span>
+          <span className="font-mono font-medium text-background ml-auto">{typeof entry.value === "number" ? entry.value.toLocaleString() : entry.value}</span>
         </div>
       ))}
     </div>
@@ -243,10 +242,10 @@ function ChartTooltipContent({ active, payload, label }: { active?: boolean; pay
 function SectionPanel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 0.1, ease: EASE_OUT }}
-      className={`rounded bg-card border border-border p-5 lg:p-6 shadow-linen ${className}`}
+      transition={{ duration: 0.4, delay: 0.1, ease: EASE_OUT }}
+      className={`border border-foreground/15 p-6 lg:p-8 ${className}`}
     >
       {children}
     </motion.div>
@@ -255,10 +254,10 @@ function SectionPanel({ children, className = "" }: { children: React.ReactNode;
 
 function SectionHeader({ title, subtitle, children }: { title: string; subtitle: string; children?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
+    <div className="flex items-center justify-between mb-8 pb-5 border-b border-foreground/15">
       <div>
-        <h3 className="text-sm font-semibold text-foreground tracking-wide uppercase font-sans">{title}</h3>
-        <p className="text-xs text-muted-foreground mt-1.5 font-sans">{subtitle}</p>
+        <h3 className="text-xs font-medium text-foreground tracking-[0.2em] uppercase font-sans">{title}</h3>
+        <p className="text-[13px] text-foreground/60 mt-2 font-sans">{subtitle}</p>
       </div>
       {children}
     </div>
@@ -384,16 +383,16 @@ function OverviewSection() {
               <AreaChart data={documentVolumeData} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
                 <defs>
                   <linearGradient id="volumeGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={C.charcoal} stopOpacity={0.25} />
-                    <stop offset="50%" stopColor={C.charcoal} stopOpacity={0.08} />
-                    <stop offset="100%" stopColor={C.charcoal} stopOpacity={0} />
+                    <stop offset="0%" stopColor={C.white} stopOpacity={0.4} />
+                    <stop offset="50%" stopColor={C.white} stopOpacity={0.15} />
+                    <stop offset="100%" stopColor={C.white} stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={C.grid} vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
+                <XAxis dataKey="month" tick={{ fontSize: 10, fill: C.tick }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: C.tick }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Area type="monotone" dataKey="documents" stroke={C.charcoal} strokeWidth={2.5} fill="url(#volumeGrad)" name="documents" animationDuration={1400} animationEasing="ease-out" />
+                <Area type="monotone" dataKey="documents" stroke={C.white} strokeWidth={2} fill="url(#volumeGrad)" name="documents" animationDuration={1400} animationEasing="ease-out" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -429,7 +428,7 @@ function OverviewSection() {
       {/* Recent Anomaly Alerts */}
       <SectionPanel>
         <SectionHeader title="Recent Anomaly Alerts" subtitle="Spikes and clusters requiring attention">
-          <button className="flex items-center gap-1.5 text-xs font-medium text-background hover:opacity-80 transition-all px-3.5 py-2 rounded bg-foreground font-sans tracking-wide">
+          <button className="flex items-center gap-1.5 text-[11px] font-medium text-primary-foreground hover:opacity-80 transition-all px-4 py-2.5 bg-foreground font-sans tracking-[0.1em] uppercase">
             View All <ChevronRight className="size-3.5" />
           </button>
         </SectionHeader>
@@ -489,10 +488,10 @@ function CasesSection() {
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">14 social justice categories from Legal-BERT classifier</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-all px-3 py-2 rounded bg-muted hover:bg-accent border border-border font-sans tracking-wide">
+            <button className="flex items-center gap-1.5 text-[11px] font-medium text-foreground/70 hover:text-foreground transition-all px-4 py-2.5 border border-foreground/20 hover:border-foreground/40 font-sans tracking-[0.1em] uppercase">
               <Filter className="size-3.5" />Filter
             </button>
-            <button className="flex items-center gap-1.5 text-xs font-medium text-background hover:opacity-80 transition-all px-3.5 py-2 rounded bg-foreground font-sans tracking-wide">
+            <button className="flex items-center gap-1.5 text-[11px] font-medium text-primary-foreground hover:opacity-80 transition-all px-4 py-2.5 bg-foreground font-sans tracking-[0.1em] uppercase">
               <Download className="size-3.5" />Export
             </button>
           </div>
@@ -566,10 +565,10 @@ function AnomaliesSection() {
       <SectionPanel className="relative overflow-hidden">
         <GlowOrb className="w-48 h-48 -top-24 -left-24 bg-fin-loss/6" />
         <SectionHeader title="Time Series Anomaly Detection" subtitle="Housing Discrimination — ZIP 11237 (Bushwick)">
-          <div className="flex items-center gap-5 text-[11px]">
-            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.charcoal }} /><span className="text-muted-foreground font-sans">Actual</span></div>
-            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.slate }} /><span className="text-muted-foreground font-sans">Expected</span></div>
-            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.stone }} /><span className="text-muted-foreground font-sans">Threshold (μ+2σ)</span></div>
+          <div className="flex items-center gap-5 text-[10px] tracking-wide">
+            <div className="flex items-center gap-2"><div className="size-2 rounded-full" style={{ background: C.white }} /><span className="text-foreground/60 font-sans uppercase">Actual</span></div>
+            <div className="flex items-center gap-2"><div className="size-2 rounded-full" style={{ background: C.linenDark }} /><span className="text-foreground/60 font-sans uppercase">Expected</span></div>
+            <div className="flex items-center gap-2"><div className="size-2 rounded-full" style={{ background: C.taupe }} /><span className="text-foreground/60 font-sans uppercase">Threshold</span></div>
           </div>
         </SectionHeader>
         <div className="h-64">
@@ -579,9 +578,9 @@ function AnomaliesSection() {
               <XAxis dataKey="week" tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} />
               <Tooltip content={<ChartTooltipContent />} />
-              <Line type="monotone" dataKey="expected" name="expected" stroke={C.slate} strokeWidth={2} dot={false} strokeDasharray="6 3" animationDuration={1100} />
-              <Line type="monotone" dataKey="threshold" name="threshold" stroke={C.stone} strokeWidth={1.5} dot={false} strokeDasharray="4 4" animationDuration={1100} />
-              <Line type="monotone" dataKey="actual" name="actual" stroke={C.charcoal} strokeWidth={2.5} dot={{ fill: C.charcoal, r: 3 }} animationDuration={1100} />
+              <Line type="monotone" dataKey="expected" name="expected" stroke={C.linenDark} strokeWidth={2} dot={false} strokeDasharray="6 3" animationDuration={1100} />
+              <Line type="monotone" dataKey="threshold" name="threshold" stroke={C.taupe} strokeWidth={1.5} dot={false} strokeDasharray="4 4" animationDuration={1100} />
+              <Line type="monotone" dataKey="actual" name="actual" stroke={C.white} strokeWidth={2.5} dot={{ fill: C.white, r: 3 }} animationDuration={1100} />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -698,7 +697,7 @@ function EntitiesSection() {
             <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Entity Clusters (DBSCAN)</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">Organizations with 5+ related complaints — potential class action targets</p>
           </div>
-          <button className="flex items-center gap-1.5 text-xs font-medium text-background hover:opacity-80 transition-all px-3.5 py-2 rounded bg-foreground font-sans tracking-wide">
+          <button className="flex items-center gap-1.5 text-[11px] font-medium text-primary-foreground hover:opacity-80 transition-all px-4 py-2.5 bg-foreground font-sans tracking-[0.1em] uppercase">
             <Target className="size-3.5" />Generate Report
           </button>
         </div>
@@ -791,10 +790,10 @@ function MediaSection() {
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">AI-generated media buy suggestions based on detected patterns</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-all px-3 py-2 rounded bg-muted hover:bg-accent border border-border font-sans tracking-wide">
+            <button className="flex items-center gap-1.5 text-[11px] font-medium text-foreground/70 hover:text-foreground transition-all px-4 py-2.5 border border-foreground/20 hover:border-foreground/40 font-sans tracking-[0.1em] uppercase">
               <Filter className="size-3.5" />Filter
             </button>
-            <button className="flex items-center gap-1.5 text-xs font-medium text-background hover:opacity-80 transition-all px-3.5 py-2 rounded bg-foreground font-sans tracking-wide">
+            <button className="flex items-center gap-1.5 text-[11px] font-medium text-primary-foreground hover:opacity-80 transition-all px-4 py-2.5 bg-foreground font-sans tracking-[0.1em] uppercase">
               <Download className="size-3.5" />Export
             </button>
           </div>
@@ -900,7 +899,7 @@ function SourcesSection() {
             <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Data Ingestion Pipeline</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">6 source categories with unified schema normalization</p>
           </div>
-          <button className="flex items-center gap-1.5 text-xs font-medium text-background hover:opacity-80 transition-all px-3.5 py-2 rounded bg-foreground font-sans tracking-wide">
+          <button className="flex items-center gap-1.5 text-[11px] font-medium text-primary-foreground hover:opacity-80 transition-all px-4 py-2.5 bg-foreground font-sans tracking-[0.1em] uppercase">
             <Plus className="size-3.5" />Add Source
           </button>
         </div>
@@ -1031,7 +1030,7 @@ function ModelSection() {
             <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Per-Category Performance</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">Target: F₁ ≥ 0.80 for deployment</p>
           </div>
-          <button className="flex items-center gap-1.5 text-xs font-medium text-background hover:opacity-80 transition-all px-3.5 py-2 rounded bg-foreground font-sans tracking-wide">
+          <button className="flex items-center gap-1.5 text-[11px] font-medium text-primary-foreground hover:opacity-80 transition-all px-4 py-2.5 bg-foreground font-sans tracking-[0.1em] uppercase">
             <Activity className="size-3.5" />Retrain Model
           </button>
         </div>
@@ -1300,31 +1299,29 @@ export default function FinancialAnalyticsDashboard() {
 
   return (
     <div className="w-full min-h-screen bg-background text-foreground flex flex-col relative grain">
-      {/* Header - Editorial minimal */}
-      <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-30 relative">
-        <div className="w-full px-6 lg:px-12 xl:px-16">
-          <div className="flex items-center justify-between h-14">
-            <div className="flex items-center gap-5">
-              <div className="flex items-center gap-3">
-                <span className="text-xl font-semibold tracking-tight text-foreground font-display">Limira</span>
-              </div>
-              <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground font-sans tracking-wide">
-                <span className="uppercase text-[10px]">Platform</span>
-                <span className="text-border">/</span>
-                <span className="text-foreground font-medium">{activeNav?.label}</span>
+      {/* Header - CBK Editorial style */}
+      <header className="border-b border-border/50 sticky top-0 z-30 relative">
+        <div className="w-full px-8 lg:px-14 xl:px-20">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-6">
+              <span className="text-2xl font-normal tracking-wide text-foreground font-display">LIMIRA</span>
+              <div className="hidden md:flex items-center gap-2 text-[11px] text-muted-foreground font-sans tracking-[0.15em] uppercase">
+                <span>Legal Intelligence</span>
+                <span className="text-foreground/30">—</span>
+                <span className="text-foreground">{activeNav?.label}</span>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button className="p-2 rounded hover:bg-accent/50 transition-colors" aria-label="Search">
-                <Search className="size-4 text-muted-foreground" />
+            <div className="flex items-center gap-3">
+              <button className="p-2.5 hover:bg-foreground/10 transition-colors" aria-label="Search">
+                <Search className="size-4 text-foreground/70" />
               </button>
               <div className="relative">
                 <button
                   onClick={() => setNotificationsOpen((prev) => !prev)}
-                  className="p-2 rounded hover:bg-accent/50 transition-colors relative"
+                  className="p-2.5 hover:bg-foreground/10 transition-colors relative"
                   aria-label="Notifications" aria-expanded={notificationsOpen}
                 >
-                  <Bell className="size-4 text-muted-foreground" />
+                  <Bell className="size-4 text-foreground/70" />
                   {unreadCount > 0 && (
                     <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SPRING}
                       className="absolute -top-0.5 -right-0.5 size-4 rounded-full bg-foreground text-background text-[9px] font-medium flex items-center justify-center font-mono">
@@ -1334,28 +1331,25 @@ export default function FinancialAnalyticsDashboard() {
                 </button>
                 <NotificationPanel isOpen={notificationsOpen} onClose={() => setNotificationsOpen(false)} items={notifItems} onMarkRead={handleMarkRead} onMarkAllRead={handleMarkAllRead} />
               </div>
-              <button className="p-2 rounded hover:bg-accent/50 transition-colors" aria-label="Settings" onClick={() => handleNavigation("settings")}>
-                <Settings className="size-4 text-muted-foreground" />
+              <button className="p-2.5 hover:bg-foreground/10 transition-colors" aria-label="Settings" onClick={() => handleNavigation("settings")}>
+                <Settings className="size-4 text-foreground/70" />
               </button>
-              <div className="size-8 rounded bg-foreground flex items-center justify-center ml-1 cursor-pointer hover:opacity-80 transition-opacity">
-                <span className="text-[10px] font-semibold text-background font-sans tracking-wide">LM</span>
-              </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Navigation - Clean tabs */}
-      <nav className="border-b border-border bg-card/60 sticky top-14 z-20 relative">
-        <div className="w-full px-6 lg:px-12 xl:px-16">
-          <div className="flex items-center gap-1 overflow-x-auto py-2 scrollbar-none">
+      {/* Navigation - Clean editorial tabs */}
+      <nav className="border-b border-border/50 sticky top-16 z-20 relative">
+        <div className="w-full px-8 lg:px-14 xl:px-20">
+          <div className="flex items-center gap-0 overflow-x-auto scrollbar-none">
             {NAV_ITEMS.map((item) => {
               const isActive = item.id === activeSection
               const Icon = item.icon
               return (
                 <button key={item.id} onClick={() => handleNavigation(item.id)}
-                  className={`relative flex items-center gap-2 px-3.5 py-2 text-[13px] font-medium rounded transition-all duration-200 whitespace-nowrap shrink-0 font-sans tracking-wide ${
-                    isActive ? "text-background bg-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                  className={`relative flex items-center gap-2.5 px-5 py-4 text-[11px] font-medium tracking-[0.12em] uppercase transition-all duration-200 whitespace-nowrap shrink-0 font-sans border-b-2 -mb-px ${
+                    isActive ? "text-foreground border-foreground" : "text-foreground/50 border-transparent hover:text-foreground/80"
                   }`}
                   aria-current={isActive ? "page" : undefined}
                 >
@@ -1369,7 +1363,7 @@ export default function FinancialAnalyticsDashboard() {
       </nav>
 
       {/* Content */}
-      <main className="w-full px-6 lg:px-12 xl:px-16 py-8 lg:py-10 flex-1 relative z-10">
+      <main className="w-full px-8 lg:px-14 xl:px-20 py-10 lg:py-12 flex-1 relative z-10">
         <AnimatePresence mode="wait">
           <motion.div key={activeSection}
             initial={{ opacity: 0, y: 12 }}
@@ -1382,19 +1376,18 @@ export default function FinancialAnalyticsDashboard() {
         </AnimatePresence>
       </main>
 
-      {/* Footer - Minimal editorial */}
-      <footer className="border-t border-border mt-auto relative z-10">
-        <div className="w-full px-6 lg:px-12 xl:px-16 py-4">
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground font-sans tracking-wide">
-            <div className="flex items-center gap-4">
+      {/* Footer - CBK Editorial */}
+      <footer className="border-t border-foreground/15 mt-auto relative z-10">
+        <div className="w-full px-8 lg:px-14 xl:px-20 py-5">
+          <div className="flex items-center justify-between text-[10px] text-foreground/50 font-sans tracking-[0.15em] uppercase">
+            <div className="flex items-center gap-6">
               <div className="flex items-center gap-2">
-                <div className="size-1.5 rounded-full bg-fin-gain" />
-                <span className="font-medium uppercase">Operational</span>
+                <div className="size-1.5 rounded-full bg-foreground/60" />
+                <span>Systems Operational</span>
               </div>
-              <span className="text-border hidden sm:inline">|</span>
-              <span className="hidden sm:inline">6 sources connected</span>
+              <span className="hidden sm:inline">6 Sources Connected</span>
             </div>
-            <span className="font-mono text-muted-foreground/70">Feb 20, 2026 08:15</span>
+            <span className="font-mono tracking-normal normal-case">Feb 20, 2026 — 08:15 UTC</span>
           </div>
         </div>
       </footer>

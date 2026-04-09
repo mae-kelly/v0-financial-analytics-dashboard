@@ -1,11 +1,11 @@
 import type { Metadata } from 'next'
-import { DM_Sans, JetBrains_Mono, Fraunces } from 'next/font/google'
+import { DM_Sans, JetBrains_Mono, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 const _dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"] })
 const _jetbrains = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500", "600", "700"] })
-const _fraunces = Fraunces({ subsets: ["latin"], weight: ["400", "500", "600", "700"] })
+const _playfair = Playfair_Display({ subsets: ["latin"], weight: ["400", "500", "600", "700"] })
 
 export const metadata: Metadata = {
   title: 'Limira — Legal Market Intelligence',
