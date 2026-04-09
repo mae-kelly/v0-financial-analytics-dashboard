@@ -3,11 +3,12 @@
 import React, { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import { motion, AnimatePresence } from "motion/react"
 import {
-  BarChart3, TrendingUp, Shield, ArrowLeftRight, Globe, ArrowUpRight, ArrowDownRight,
-  ChevronRight, Bell, Search, Settings, Wallet, CircleDot, Eye, FileText, UserCog,
-  X, Check, AlertTriangle, Info, DollarSign, Clock, Star, Plus, Download, Filter,
+  BarChart3, TrendingUp, Shield, AlertTriangle, Globe, ArrowUpRight, ArrowDownRight,
+  ChevronRight, Bell, Search, Settings, FileText, UserCog, Scale, Radio,
+  X, Check, Info, Clock, Plus, Download, Filter, MapPin, Users, Cpu,
   Calendar, Mail, Lock, Palette, Monitor, BellRing, CreditCard, Languages, HelpCircle,
-  LogOut, ChevronDown, Activity, Zap,
+  LogOut, ChevronDown, Activity, Zap, Database, Target, Eye, Megaphone, Layers,
+  Building2, Home, Vote, AlertCircle, CircleDot, Hash, TrendingDown,
 } from "lucide-react"
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line,
@@ -34,6 +35,8 @@ const C = {
   grid: "oklch(0.24 0.01 260)",
   tick: "oklch(0.50 0.015 260)",
   surface: "oklch(0.175 0.01 260)",
+  indigo: "oklch(0.65 0.18 270)",
+  coral: "oklch(0.70 0.18 30)",
 }
 
 const SPRING = { type: "spring" as const, stiffness: 400, damping: 32 }
@@ -42,130 +45,120 @@ const EASE_OUT = [0.16, 1, 0.3, 1] as const
 // ─── Data ──────────────────────────────────────────────────────
 
 const NAV_ITEMS = [
-  { id: "portfolio", label: "Portfolio", icon: Wallet },
-  { id: "performance", label: "Performance", icon: TrendingUp },
-  { id: "risk", label: "Risk", icon: Shield },
-  { id: "transactions", label: "Transactions", icon: ArrowLeftRight },
-  { id: "market", label: "Market", icon: Globe },
-  { id: "watchlist", label: "Watchlist", icon: Eye },
-  { id: "reports", label: "Reports", icon: FileText },
+  { id: "overview", label: "Overview", icon: BarChart3 },
+  { id: "cases", label: "Case Detection", icon: Scale },
+  { id: "anomalies", label: "Anomalies", icon: AlertTriangle },
+  { id: "entities", label: "Entities", icon: Users },
+  { id: "media", label: "Media Recs", icon: Megaphone },
+  { id: "sources", label: "Data Sources", icon: Database },
+  { id: "model", label: "Model Performance", icon: Cpu },
   { id: "settings", label: "Settings", icon: UserCog },
 ] as const
 
 type SectionId = (typeof NAV_ITEMS)[number]["id"]
 
-const portfolioData = [
-  { month: "Jul", value: 42000 }, { month: "Aug", value: 44500 }, { month: "Sep", value: 43200 },
-  { month: "Oct", value: 47800 }, { month: "Nov", value: 46100 }, { month: "Dec", value: 49300 },
-  { month: "Jan", value: 51200 }, { month: "Feb", value: 53800 }, { month: "Mar", value: 52100 },
-  { month: "Apr", value: 56400 }, { month: "May", value: 58900 }, { month: "Jun", value: 62450 },
+// Case type taxonomy from Limira spec
+const caseTypes = [
+  { id: 0, name: "Race Discrimination", count: 3245, trend: 12.4 },
+  { id: 1, name: "Gender Discrimination", count: 2891, trend: 8.2 },
+  { id: 2, name: "Age Discrimination", count: 1456, trend: -3.1 },
+  { id: 3, name: "Disability Discrimination", count: 1289, trend: 15.7 },
+  { id: 4, name: "Religious Discrimination", count: 567, trend: 4.8 },
+  { id: 5, name: "Sexual Harassment", count: 2134, trend: -5.2 },
+  { id: 6, name: "Housing Discrimination", count: 4521, trend: 22.3 },
+  { id: 7, name: "Wage Theft", count: 6789, trend: 18.9 },
+  { id: 8, name: "Wrongful Termination", count: 3456, trend: 7.1 },
+  { id: 9, name: "Police Misconduct", count: 892, trend: 11.3 },
+  { id: 10, name: "Immigration Violations", count: 1123, trend: 9.4 },
+  { id: 11, name: "ADA Accessibility", count: 2345, trend: 14.2 },
+  { id: 12, name: "Consumer Fraud", count: 5678, trend: 25.1 },
+  { id: 13, name: "Environmental Justice", count: 432, trend: 32.8 },
 ]
 
-const allocationData = [
-  { name: "Equities", value: 45, color: C.teal },
-  { name: "Fixed Income", value: 25, color: C.azure },
-  { name: "Alternatives", value: 15, color: C.amber },
-  { name: "Cash", value: 10, color: C.slate },
-  { name: "Crypto", value: 5, color: C.rose },
+const documentVolumeData = [
+  { month: "Sep", documents: 142000 }, { month: "Oct", documents: 158000 }, { month: "Nov", documents: 165000 },
+  { month: "Dec", documents: 148000 }, { month: "Jan", documents: 172000 }, { month: "Feb", documents: 189000 },
 ]
 
-const performanceMonthly = [
-  { month: "Jan", return: 3.2, benchmark: 2.8 }, { month: "Feb", return: -1.1, benchmark: -0.5 },
-  { month: "Mar", return: 4.5, benchmark: 3.1 }, { month: "Apr", return: 2.8, benchmark: 2.2 },
-  { month: "May", return: -0.3, benchmark: -1.0 }, { month: "Jun", return: 5.1, benchmark: 4.2 },
-  { month: "Jul", return: 1.9, benchmark: 1.5 }, { month: "Aug", return: 3.6, benchmark: 2.9 },
-  { month: "Sep", return: -2.1, benchmark: -2.8 }, { month: "Oct", return: 4.8, benchmark: 3.5 },
-  { month: "Nov", return: 2.4, benchmark: 1.8 }, { month: "Dec", return: 3.9, benchmark: 3.3 },
+const caseDistribution = [
+  { name: "Wage Theft", value: 22, color: C.teal },
+  { name: "Consumer Fraud", value: 18, color: C.azure },
+  { name: "Housing", value: 14, color: C.amber },
+  { name: "Employment", value: 28, color: C.coral },
+  { name: "Civil Rights", value: 12, color: C.indigo },
+  { name: "Other", value: 6, color: C.slate },
 ]
 
-const riskMetrics = [
-  { metric: "Sharpe Ratio", value: 1.84, status: "good" as const, icon: Zap },
-  { metric: "Max Drawdown", value: -8.2, status: "moderate" as const, icon: ArrowDownRight },
-  { metric: "Beta", value: 0.92, status: "good" as const, icon: Activity },
-  { metric: "VaR (95%)", value: -2.4, status: "moderate" as const, icon: Shield },
+const anomalyAlerts = [
+  { id: 1, type: "spike" as const, category: "Housing Discrimination", location: "11237 — Bushwick", severity: "high" as const, count: 47, baseline: 12, date: "2026-02-20", time: "08:15" },
+  { id: 2, type: "cluster" as const, category: "Wage Theft", location: "10001 — Chelsea", severity: "high" as const, count: 38, baseline: 8, date: "2026-02-19", time: "14:22" },
+  { id: 3, type: "spike" as const, category: "ADA Accessibility", location: "11201 — Brooklyn Heights", severity: "medium" as const, count: 23, baseline: 9, date: "2026-02-19", time: "11:45" },
+  { id: 4, type: "cluster" as const, category: "Consumer Fraud", location: "10019 — Midtown", severity: "medium" as const, count: 31, baseline: 14, date: "2026-02-18", time: "16:30" },
+  { id: 5, type: "spike" as const, category: "Gender Discrimination", location: "10013 — Tribeca", severity: "low" as const, count: 18, baseline: 11, date: "2026-02-18", time: "09:12" },
+  { id: 6, type: "emerging" as const, category: "Environmental Justice", location: "11385 — Ridgewood", severity: "high" as const, count: 15, baseline: 2, date: "2026-02-17", time: "13:55" },
 ]
 
-const volatilityData = [
-  { month: "Jan", portfolio: 12.4, market: 15.2 }, { month: "Feb", portfolio: 14.1, market: 16.8 },
-  { month: "Mar", portfolio: 11.3, market: 14.5 }, { month: "Apr", portfolio: 10.8, market: 13.9 },
-  { month: "May", portfolio: 13.5, market: 17.2 }, { month: "Jun", portfolio: 9.8, market: 12.3 },
-  { month: "Jul", portfolio: 11.2, market: 14.8 }, { month: "Aug", portfolio: 10.5, market: 13.1 },
-  { month: "Sep", portfolio: 15.2, market: 19.4 }, { month: "Oct", portfolio: 12.8, market: 16.1 },
-  { month: "Nov", portfolio: 10.1, market: 12.7 }, { month: "Dec", portfolio: 9.4, market: 11.9 },
+const entityClusters = [
+  { id: 1, entity: "Apex Property Management", type: "ORG", cases: 34, categories: ["Housing Discrimination", "ADA Accessibility"], locations: ["11237", "11211", "11206"], confidence: 0.94 },
+  { id: 2, entity: "Metro Staffing Solutions", type: "ORG", cases: 28, categories: ["Wage Theft", "Gender Discrimination"], locations: ["10001", "10018"], confidence: 0.89 },
+  { id: 3, entity: "Quick Eats Restaurant Group", type: "ORG", cases: 45, categories: ["Wage Theft", "Wrongful Termination"], locations: ["10019", "10036", "10022"], confidence: 0.92 },
+  { id: 4, entity: "NYPD 77th Precinct", type: "ORG", cases: 12, categories: ["Police Misconduct"], locations: ["11238"], confidence: 0.87 },
+  { id: 5, entity: "Downtown Retail Holdings", type: "ORG", cases: 21, categories: ["Consumer Fraud", "ADA Accessibility"], locations: ["10007", "10038"], confidence: 0.85 },
 ]
 
-const sectorExposure = [
-  { name: "Technology", value: 85, fill: C.teal },
-  { name: "Healthcare", value: 65, fill: C.azure },
-  { name: "Finance", value: 52, fill: C.amber },
-  { name: "Energy", value: 38, fill: C.rose },
+const mediaRecommendations = [
+  { id: 1, channel: "Facebook Ads", audience: "Bushwick residents 25-54", reach: "42,000", cpm: "$8.50", relevance: 94, caseType: "Housing Discrimination" },
+  { id: 2, channel: "Google Display", audience: "Restaurant workers NYC", reach: "85,000", cpm: "$6.20", relevance: 91, caseType: "Wage Theft" },
+  { id: 3, channel: "Local Radio", audience: "WNYC Morning Drive", reach: "125,000", cpm: "$12.00", relevance: 88, caseType: "Consumer Fraud" },
+  { id: 4, channel: "Reddit r/nyc", audience: "NYC subreddit users", reach: "340,000", cpm: "$4.50", relevance: 86, caseType: "Housing Discrimination" },
+  { id: 5, channel: "Instagram Stories", audience: "Brooklyn millennials", reach: "68,000", cpm: "$7.80", relevance: 82, caseType: "Wage Theft" },
 ]
 
-const transactions = [
-  { id: 1, type: "buy" as const, asset: "AAPL", shares: 25, price: 189.45, total: 4736.25, date: "2026-02-18", time: "09:32" },
-  { id: 2, type: "sell" as const, asset: "TSLA", shares: 10, price: 248.72, total: 2487.2, date: "2026-02-17", time: "14:15" },
-  { id: 3, type: "buy" as const, asset: "NVDA", shares: 15, price: 875.3, total: 13129.5, date: "2026-02-15", time: "10:45" },
-  { id: 4, type: "sell" as const, asset: "AMZN", shares: 8, price: 178.9, total: 1431.2, date: "2026-02-14", time: "15:22" },
-  { id: 5, type: "buy" as const, asset: "MSFT", shares: 20, price: 415.6, total: 8312.0, date: "2026-02-13", time: "11:08" },
-  { id: 6, type: "buy" as const, asset: "GOOG", shares: 12, price: 174.25, total: 2091.0, date: "2026-02-12", time: "09:55" },
-  { id: 7, type: "sell" as const, asset: "META", shares: 18, price: 582.4, total: 10483.2, date: "2026-02-11", time: "13:30" },
-  { id: 8, type: "buy" as const, asset: "AMD", shares: 30, price: 168.15, total: 5044.5, date: "2026-02-10", time: "10:12" },
+const dataSources = [
+  { name: "NYC Open Data", status: "active" as const, lastSync: "2026-02-20 08:00", documents: 245000, refresh: "Weekly" },
+  { name: "PACER", status: "active" as const, lastSync: "2026-02-20 06:00", documents: 189000, refresh: "Daily" },
+  { name: "NYSCEF", status: "active" as const, lastSync: "2026-02-20 06:00", documents: 312000, refresh: "Daily" },
+  { name: "EEOC", status: "active" as const, lastSync: "2026-02-01 00:00", documents: 45000, refresh: "Monthly" },
+  { name: "Reddit (PRAW)", status: "active" as const, lastSync: "2026-02-20 07:30", documents: 890000, refresh: "6 hours" },
+  { name: "Avvo / Glassdoor", status: "syncing" as const, lastSync: "2026-02-20 07:45", documents: 156000, refresh: "6 hours" },
 ]
 
-const marketIndices = [
-  { name: "S&P 500", value: "5,842.31", change: 1.24, data: [40, 42, 38, 45, 43, 47, 49, 48, 52, 50, 54, 56] },
-  { name: "NASDAQ", value: "18,471.52", change: 1.58, data: [60, 63, 58, 67, 65, 70, 72, 69, 75, 73, 78, 82] },
-  { name: "DOW Jones", value: "42,987.65", change: -0.32, data: [80, 78, 82, 79, 77, 80, 83, 81, 79, 82, 80, 78] },
-  { name: "Russell 2000", value: "2,198.44", change: 0.89, data: [20, 22, 19, 24, 23, 25, 27, 26, 28, 27, 30, 31] },
+const modelMetrics = [
+  { category: "Race Discrimination", precision: 0.87, recall: 0.84, f1: 0.85, samples: 2450 },
+  { category: "Gender Discrimination", precision: 0.89, recall: 0.86, f1: 0.87, samples: 2180 },
+  { category: "Housing Discrimination", precision: 0.91, recall: 0.88, f1: 0.89, samples: 3200 },
+  { category: "Wage Theft", precision: 0.93, recall: 0.91, f1: 0.92, samples: 4500 },
+  { category: "Consumer Fraud", precision: 0.85, recall: 0.82, f1: 0.83, samples: 3800 },
+  { category: "Environmental Justice", precision: 0.78, recall: 0.74, f1: 0.76, samples: 320 },
 ]
 
-const topMovers = [
-  { ticker: "NVDA", name: "NVIDIA Corp", change: 4.82, price: 892.15 },
-  { ticker: "SMCI", name: "Super Micro", change: 7.21, price: 845.3 },
-  { ticker: "PLTR", name: "Palantir", change: -3.15, price: 72.4 },
-  { ticker: "ARM", name: "ARM Holdings", change: 5.43, price: 168.9 },
-  { ticker: "COIN", name: "Coinbase", change: -2.87, price: 215.6 },
+const timeSeriesAnomaly = [
+  { week: "W1", actual: 12, expected: 11, threshold: 18 },
+  { week: "W2", actual: 14, expected: 12, threshold: 19 },
+  { week: "W3", actual: 11, expected: 12, threshold: 19 },
+  { week: "W4", actual: 15, expected: 13, threshold: 20 },
+  { week: "W5", actual: 13, expected: 12, threshold: 19 },
+  { week: "W6", actual: 18, expected: 13, threshold: 20 },
+  { week: "W7", actual: 16, expected: 13, threshold: 20 },
+  { week: "W8", actual: 14, expected: 13, threshold: 20 },
+  { week: "W9", actual: 42, expected: 14, threshold: 21 },
+  { week: "W10", actual: 38, expected: 15, threshold: 22 },
+  { week: "W11", actual: 47, expected: 16, threshold: 23 },
+  { week: "W12", actual: 45, expected: 17, threshold: 24 },
 ]
 
 const notifications = [
-  { id: 1, type: "success" as const, title: "Order Executed", message: "Bought 25 shares of AAPL at $189.45", time: "2 min ago", read: false },
-  { id: 2, type: "warning" as const, title: "Price Alert", message: "TSLA dropped below your $250 threshold", time: "18 min ago", read: false },
-  { id: 3, type: "info" as const, title: "Portfolio Rebalance", message: "Your quarterly rebalance is scheduled for tomorrow", time: "1h ago", read: false },
-  { id: 4, type: "success" as const, title: "Dividend Received", message: "$342.50 dividend from MSFT credited to your account", time: "3h ago", read: true },
-  { id: 5, type: "warning" as const, title: "Risk Alert", message: "Concentration in Technology sector exceeds 45% limit", time: "5h ago", read: true },
-  { id: 6, type: "info" as const, title: "Market Update", message: "Fed minutes released — markets react positively", time: "6h ago", read: true },
-  { id: 7, type: "success" as const, title: "Transfer Complete", message: "$10,000 deposit successfully processed", time: "1d ago", read: true },
+  { id: 1, type: "warning" as const, title: "Anomaly Detected", message: "Housing complaints in Bushwick exceeded 2σ threshold", time: "12 min ago", read: false },
+  { id: 2, type: "success" as const, title: "Model Updated", message: "Classification model retrained with 2,500 new samples", time: "2h ago", read: false },
+  { id: 3, type: "info" as const, title: "New Cluster Found", message: "Entity cluster detected: Quick Eats Restaurant Group", time: "4h ago", read: false },
+  { id: 4, type: "warning" as const, title: "Emerging Topic", message: "Environmental justice mentions increased 650% in Ridgewood", time: "6h ago", read: true },
+  { id: 5, type: "success" as const, title: "Data Sync Complete", message: "PACER daily sync completed — 1,247 new documents", time: "8h ago", read: true },
 ]
 
-const watchlistItems = [
-  { ticker: "AAPL", name: "Apple Inc.", price: 189.45, change: 2.31, volume: "48.2M", pe: 28.4, marketCap: "2.94T", data: [180, 183, 181, 185, 187, 184, 189, 188, 190, 189, 191, 189] },
-  { ticker: "NVDA", name: "NVIDIA Corp", price: 892.15, change: 4.82, volume: "62.1M", pe: 65.2, marketCap: "2.20T", data: [820, 835, 845, 860, 855, 870, 880, 875, 890, 885, 895, 892] },
-  { ticker: "MSFT", name: "Microsoft Corp", price: 415.60, change: 1.15, volume: "22.8M", pe: 34.1, marketCap: "3.09T", data: [400, 403, 408, 405, 410, 412, 408, 414, 416, 413, 417, 416] },
-  { ticker: "AMZN", name: "Amazon.com Inc", price: 178.90, change: -0.72, volume: "38.5M", pe: 42.8, marketCap: "1.86T", data: [175, 178, 180, 179, 182, 181, 179, 180, 178, 179, 177, 179] },
-  { ticker: "GOOG", name: "Alphabet Inc", price: 174.25, change: 0.98, volume: "18.9M", pe: 22.6, marketCap: "2.15T", data: [168, 170, 172, 171, 173, 172, 174, 173, 175, 174, 176, 174] },
-  { ticker: "META", name: "Meta Platforms", price: 582.40, change: 3.12, volume: "15.4M", pe: 25.9, marketCap: "1.48T", data: [555, 560, 565, 570, 568, 575, 578, 572, 580, 576, 585, 582] },
-  { ticker: "TSLA", name: "Tesla Inc", price: 248.72, change: -2.45, volume: "85.7M", pe: 58.3, marketCap: "792B", data: [260, 258, 255, 252, 256, 253, 250, 252, 248, 251, 247, 249] },
-  { ticker: "BRK.B", name: "Berkshire Hathaway", price: 462.30, change: 0.45, volume: "3.2M", pe: 9.1, marketCap: "1.05T", data: [455, 457, 458, 460, 459, 461, 460, 462, 461, 463, 462, 462] },
-]
-
-const reportsData = [
-  { id: 1, name: "Q4 2025 Performance Report", type: "Performance", date: "2026-01-15", status: "ready" as const, size: "2.4 MB" },
-  { id: 2, name: "Annual Tax Summary 2025", type: "Tax", date: "2026-02-01", status: "ready" as const, size: "1.8 MB" },
-  { id: 3, name: "Risk Assessment — February", type: "Risk", date: "2026-02-10", status: "ready" as const, size: "3.1 MB" },
-  { id: 4, name: "Dividend Income Report", type: "Income", date: "2026-02-14", status: "ready" as const, size: "0.9 MB" },
-  { id: 5, name: "Portfolio Allocation Analysis", type: "Analysis", date: "2026-02-18", status: "generating" as const, size: "—" },
-  { id: 6, name: "Monthly Statement — January", type: "Statement", date: "2026-02-05", status: "ready" as const, size: "1.2 MB" },
-  { id: 7, name: "Custom Benchmark Comparison", type: "Performance", date: "2026-02-12", status: "ready" as const, size: "2.7 MB" },
-  { id: 8, name: "ESG Compliance Summary", type: "Compliance", date: "2026-02-08", status: "ready" as const, size: "1.5 MB" },
-]
-
-const incomeByMonth = [
-  { month: "Sep", dividends: 285, interest: 120, other: 45 },
-  { month: "Oct", dividends: 310, interest: 125, other: 30 },
-  { month: "Nov", dividends: 420, interest: 130, other: 55 },
-  { month: "Dec", dividends: 580, interest: 135, other: 40 },
-  { month: "Jan", dividends: 345, interest: 128, other: 35 },
-  { month: "Feb", dividends: 390, interest: 132, other: 50 },
+const verticalTabs = [
+  { id: "legal", label: "Legal Intelligence", icon: Scale, active: true },
+  { id: "political", label: "Political Campaigns", icon: Vote, active: false },
+  { id: "homeservices", label: "Home Services", icon: Home, active: false },
 ]
 
 // ─── Sub-Components ─────────────────────────────────────────────
@@ -311,7 +304,7 @@ function NotificationPanel({ isOpen, onClose, items, onMarkRead, onMarkAllRead }
         >
           <div className="flex items-center justify-between p-5 border-b border-border/50">
             <div className="flex items-center gap-2.5">
-              <h3 className="text-sm font-bold text-foreground font-display tracking-tight">Notifications</h3>
+              <h3 className="text-sm font-bold text-foreground font-display tracking-tight">Alerts</h3>
               {unreadCount > 0 && (
                 <span className="text-[10px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">{unreadCount}</span>
               )}
@@ -355,34 +348,47 @@ function NotificationPanel({ isOpen, onClose, items, onMarkRead, onMarkAllRead }
   )
 }
 
-// ─── Section: Portfolio ─────────────────────────────────────────
+function SeverityBadge({ severity }: { severity: "high" | "medium" | "low" }) {
+  const styles = {
+    high: "bg-fin-loss/10 text-fin-loss",
+    medium: "bg-chart-3/10 text-chart-3",
+    low: "bg-chart-2/10 text-chart-2",
+  }
+  return (
+    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${styles[severity]}`}>
+      {severity}
+    </span>
+  )
+}
 
-function PortfolioSection() {
+// ─── Section: Overview ─────────────────────────────────────────
+
+function OverviewSection() {
   return (
     <div className={`flex flex-col gap-5 ${SECTION_MIN_H}`}>
       {/* Hero KPI row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        <KpiCard label="Total Balance" value="62,450" prefix="$" change={6.03} delay={0} icon={DollarSign} />
-        <KpiCard label="Today's P&L" value="1,284" prefix="+$" change={2.11} delay={0.06} icon={TrendingUp} />
-        <KpiCard label="Total Return" value="48.7" suffix="%" change={12.4} delay={0.12} icon={ArrowUpRight} />
-        <KpiCard label="Dividend Yield" value="2.34" suffix="%" delay={0.18} icon={Wallet} />
+        <KpiCard label="Documents Processed" value="1.87M" change={14.2} delay={0} icon={FileText} />
+        <KpiCard label="Cases Classified" value="36,818" change={18.9} delay={0.06} icon={Scale} />
+        <KpiCard label="Active Anomalies" value="47" change={32.1} delay={0.12} icon={AlertTriangle} />
+        <KpiCard label="Model F1 Score" value="0.86" suffix=" avg" delay={0.18} icon={Cpu} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Main chart */}
         <SectionPanel className="lg:col-span-2 relative overflow-hidden">
           <GlowOrb className="w-64 h-64 -top-32 -right-32 bg-primary/10" />
-          <SectionHeader title="Portfolio Value" subtitle="Last 12 months">
+          <SectionHeader title="Document Ingestion Volume" subtitle="Monthly document processing">
             <div className="flex items-center gap-1.5 rounded-xl bg-fin-gain/8 px-3 py-1.5 glow-teal-sm">
               <ArrowUpRight className="size-3.5 text-fin-gain" />
-              <span className="text-xs font-bold text-fin-gain font-mono">+48.7%</span>
+              <span className="text-xs font-bold text-fin-gain font-mono">+14.2%</span>
             </div>
           </SectionHeader>
           <div className="h-56 lg:h-72">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={portfolioData} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
+              <AreaChart data={documentVolumeData} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
                 <defs>
-                  <linearGradient id="portfolioGrad" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="volumeGrad" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor={C.teal} stopOpacity={0.25} />
                     <stop offset="50%" stopColor={C.teal} stopOpacity={0.08} />
                     <stop offset="100%" stopColor={C.teal} stopOpacity={0} />
@@ -390,29 +396,29 @@ function PortfolioSection() {
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={C.grid} vertical={false} />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}k`} />
+                <YAxis tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Area type="monotone" dataKey="value" stroke={C.teal} strokeWidth={2.5} fill="url(#portfolioGrad)" name="value" animationDuration={1400} animationEasing="ease-out" />
+                <Area type="monotone" dataKey="documents" stroke={C.teal} strokeWidth={2.5} fill="url(#volumeGrad)" name="documents" animationDuration={1400} animationEasing="ease-out" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </SectionPanel>
 
-        {/* Allocation donut */}
+        {/* Case Distribution donut */}
         <SectionPanel>
-          <SectionHeader title="Asset Allocation" subtitle="Current distribution" />
+          <SectionHeader title="Case Distribution" subtitle="By primary category" />
           <div className="h-48 flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={allocationData} cx="50%" cy="50%" innerRadius="58%" outerRadius="82%" paddingAngle={4} dataKey="value" animationDuration={1200} animationEasing="ease-out" stroke="none">
-                  {allocationData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                <Pie data={caseDistribution} cx="50%" cy="50%" innerRadius="58%" outerRadius="82%" paddingAngle={4} dataKey="value" animationDuration={1200} animationEasing="ease-out" stroke="none">
+                  {caseDistribution.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                 </Pie>
                 <Tooltip content={<ChartTooltipContent />} />
               </PieChart>
             </ResponsiveContainer>
           </div>
           <div className="flex flex-col gap-2.5 mt-3">
-            {allocationData.map((item, i) => (
+            {caseDistribution.map((item, i) => (
               <div key={i} className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2.5">
                   <div className="size-2.5 rounded-full" style={{ backgroundColor: item.color }} />
@@ -424,454 +430,75 @@ function PortfolioSection() {
           </div>
         </SectionPanel>
       </div>
-    </div>
-  )
-}
 
-// ─── Section: Performance ───────────────────────────────────────
-
-function PerformanceSection() {
-  return (
-    <div className={`flex flex-col gap-5 ${SECTION_MIN_H}`}>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        <KpiCard label="YTD Return" value="18.42" suffix="%" change={18.42} delay={0} icon={TrendingUp} />
-        <KpiCard label="1Y Return" value="24.87" suffix="%" change={24.87} delay={0.06} icon={ArrowUpRight} />
-        <KpiCard label="Alpha" value="3.61" suffix="%" delay={0.12} icon={Zap} />
-        <KpiCard label="Win Rate" value="68.5" suffix="%" delay={0.18} icon={Check} />
-      </div>
-
-      <SectionPanel className="relative overflow-hidden">
-        <GlowOrb className="w-48 h-48 -top-24 -left-24 bg-chart-2/8" />
-        <SectionHeader title="Monthly Returns vs Benchmark" subtitle="Portfolio outperformance by month">
-          <div className="flex items-center gap-5 text-[11px]">
-            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full bg-primary" /><span className="text-muted-foreground font-sans">Portfolio</span></div>
-            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.slate }} /><span className="text-muted-foreground font-sans">Benchmark</span></div>
-          </div>
+      {/* Recent Anomaly Alerts */}
+      <SectionPanel>
+        <SectionHeader title="Recent Anomaly Alerts" subtitle="Spikes and clusters requiring attention">
+          <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
+            View All <ChevronRight className="size-3.5" />
+          </button>
         </SectionHeader>
-        <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={performanceMonthly} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={C.grid} vertical={false} />
-              <XAxis dataKey="month" tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
-              <Tooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="return" name="return" fill={C.teal} radius={[6, 6, 0, 0]} animationDuration={900} />
-              <Bar dataKey="benchmark" name="benchmark" fill={C.slate} radius={[6, 6, 0, 0]} animationDuration={900} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </SectionPanel>
-
-      <SectionPanel>
-        <SectionHeader title="Performance Attribution" subtitle="Contribution by sector" />
-        <div className="flex flex-col gap-4">
-          {[
-            { sector: "Technology", contrib: 8.2, weight: 45 },
-            { sector: "Healthcare", contrib: 3.1, weight: 18 },
-            { sector: "Financials", contrib: 2.4, weight: 15 },
-            { sector: "Consumer", contrib: 1.8, weight: 12 },
-            { sector: "Energy", contrib: -0.7, weight: 10 },
-          ].map((item, i) => (
-            <div key={i} className="flex items-center gap-4">
-              <span className="text-xs text-muted-foreground w-24 shrink-0 font-sans font-medium">{item.sector}</span>
-              <div className="flex-1 h-2.5 rounded-full bg-muted/60 overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${item.weight}%` }}
-                  transition={{ duration: 1, delay: 0.3 + i * 0.1, ease: EASE_OUT }}
-                  className="h-full rounded-full"
-                  style={{ background: item.contrib >= 0 ? C.teal : C.rose }}
-                />
-              </div>
-              <span className={`text-xs font-mono font-bold w-14 text-right ${item.contrib >= 0 ? "text-fin-gain" : "text-fin-loss"}`}>
-                {item.contrib > 0 ? "+" : ""}{item.contrib}%
-              </span>
-            </div>
-          ))}
-        </div>
-      </SectionPanel>
-    </div>
-  )
-}
-
-// ─── Section: Risk ──────────────────────────────────────────────
-
-function RiskSection() {
-  return (
-    <div className={`flex flex-col gap-5 ${SECTION_MIN_H}`}>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        {riskMetrics.map((m, i) => {
-          const Icon = m.icon
-          return (
+        <div className="flex flex-col gap-2.5">
+          {anomalyAlerts.slice(0, 4).map((alert, i) => (
             <motion.div
-              key={m.metric}
-              initial={{ opacity: 0, y: 16, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.5, delay: i * 0.06, ease: EASE_OUT }}
-              className="relative overflow-hidden rounded-2xl surface-card p-4 lg:p-5 group hover:scale-[1.01] transition-transform duration-300"
-              style={{ boxShadow: CARD_SHADOW }}
+              key={alert.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.35, delay: 0.15 + i * 0.05 }}
+              className="flex items-center justify-between p-3.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all duration-200 group"
             >
-              <div className="absolute top-0 right-0 w-20 h-20 opacity-[0.04] pointer-events-none">
-                <Icon className="size-20 -translate-y-3 translate-x-3" />
-              </div>
-              <div className="flex items-center justify-between mb-2.5">
-                <p className="text-[11px] font-semibold tracking-[0.08em] uppercase text-muted-foreground font-sans">{m.metric}</p>
-                <div className={`size-2.5 rounded-full ${m.status === "good" ? "bg-fin-gain" : "bg-chart-3"} ${m.status === "good" ? "glow-teal-sm" : ""}`} />
-              </div>
-              <p className="text-2xl lg:text-3xl font-bold text-foreground font-mono tracking-tighter leading-none">
-                {m.value > 0 ? m.value.toFixed(2) : `${m.value}%`}
-              </p>
-            </motion.div>
-          )
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <SectionPanel className="relative overflow-hidden">
-          <GlowOrb className="w-40 h-40 -bottom-20 -left-20 bg-chart-2/6" />
-          <SectionHeader title="Volatility Comparison" subtitle="Portfolio vs Market (annualized)" />
-          <div className="h-60">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={volatilityData} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke={C.grid} vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}%`} />
-                <Tooltip content={<ChartTooltipContent />} />
-                <Line type="monotone" dataKey="portfolio" name="portfolio" stroke={C.teal} strokeWidth={2.5} dot={false} animationDuration={1100} />
-                <Line type="monotone" dataKey="market" name="market" stroke={C.rose} strokeWidth={2} dot={false} strokeDasharray="6 3" animationDuration={1100} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </SectionPanel>
-
-        <SectionPanel>
-          <SectionHeader title="Sector Exposure" subtitle="Concentration risk by sector" />
-          <div className="h-60">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadialBarChart cx="50%" cy="50%" innerRadius="20%" outerRadius="90%" data={sectorExposure} startAngle={180} endAngle={0}>
-                <RadialBar dataKey="value" cornerRadius={8} animationDuration={1100} label={false} background={{ fill: C.surface }} />
-                <Tooltip content={<ChartTooltipContent />} />
-              </RadialBarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex flex-wrap gap-x-5 gap-y-2 mt-3">
-            {sectorExposure.map((s, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs">
-                <div className="size-2.5 rounded-full" style={{ backgroundColor: s.fill }} />
-                <span className="text-muted-foreground font-sans">{s.name}</span>
-                <span className="font-mono font-bold text-foreground">{s.value}%</span>
-              </div>
-            ))}
-          </div>
-        </SectionPanel>
-      </div>
-
-      <SectionPanel>
-        <SectionHeader title="Risk Score Overview" subtitle="Aggregated risk dimensions" />
-        <div className="flex flex-col gap-5">
-          {[
-            { label: "Overall Risk", score: 42, category: "Moderate" },
-            { label: "Concentration Risk", score: 58, category: "Elevated" },
-            { label: "Liquidity Risk", score: 22, category: "Low" },
-            { label: "Currency Risk", score: 35, category: "Moderate" },
-          ].map((item, i) => (
-            <div key={i} className="flex items-center gap-4">
-              <span className="text-xs text-muted-foreground font-sans font-medium w-36 shrink-0">{item.label}</span>
-              <div className="flex-1 h-2.5 rounded-full bg-muted/60 overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${item.score}%` }}
-                  transition={{ duration: 1, delay: 0.3 + i * 0.1, ease: EASE_OUT }}
-                  className="h-full rounded-full"
-                  style={{ background: item.score <= 30 ? C.gain : item.score <= 50 ? C.amber : C.rose }}
-                />
-              </div>
-              <span className="text-xs font-semibold text-foreground w-20 text-right font-sans">{item.category}</span>
-            </div>
-          ))}
-        </div>
-      </SectionPanel>
-    </div>
-  )
-}
-
-// ─── Section: Transactions ──────────────────────────────────────
-
-function TransactionsSection() {
-  return (
-    <div className={`flex flex-col gap-5 ${SECTION_MIN_H}`}>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        <KpiCard label="Total Volume" value="47,714" prefix="$" delay={0} icon={DollarSign} />
-        <KpiCard label="Transactions" value="8" delay={0.06} icon={ArrowLeftRight} />
-        <KpiCard label="Avg. Size" value="5,964" prefix="$" delay={0.12} icon={BarChart3} />
-        <KpiCard label="Buy/Sell Ratio" value="5:3" delay={0.18} icon={Activity} />
-      </div>
-
-      <SectionPanel className="!p-0 overflow-hidden">
-        <div className="p-5 lg:p-6 border-b border-border/50">
-          <SectionHeader title="Recent Transactions" subtitle="Latest activity across all accounts" />
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border/50">
-                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Type</th>
-                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Asset</th>
-                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden sm:table-cell">Shares</th>
-                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden md:table-cell">Price</th>
-                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Total</th>
-                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden lg:table-cell">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.map((tx, i) => (
-                <motion.tr
-                  key={tx.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.35, delay: 0.15 + i * 0.04 }}
-                  className="border-b border-border/30 hover:bg-accent/20 transition-all duration-200"
-                >
-                  <td className="p-4">
-                    <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg ${tx.type === "buy" ? "bg-fin-gain/10 text-fin-gain" : "bg-fin-loss/10 text-fin-loss"}`}>
-                      {tx.type === "buy" ? <ArrowDownRight className="size-3" /> : <ArrowUpRight className="size-3" />}
-                      {tx.type.toUpperCase()}
-                    </span>
-                  </td>
-                  <td className="p-4"><span className="font-bold font-mono text-foreground text-sm">{tx.asset}</span></td>
-                  <td className="p-4 text-right font-mono text-muted-foreground hidden sm:table-cell">{tx.shares}</td>
-                  <td className="p-4 text-right font-mono text-muted-foreground hidden md:table-cell">${tx.price.toFixed(2)}</td>
-                  <td className="p-4 text-right font-mono font-bold text-foreground">${tx.total.toLocaleString("en-US", { minimumFractionDigits: 2 })}</td>
-                  <td className="p-4 text-right text-xs text-muted-foreground hidden lg:table-cell font-mono">{tx.date} <span className="text-muted-foreground/50">{tx.time}</span></td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </SectionPanel>
-    </div>
-  )
-}
-
-// ─── Section: Market ────────────────────────────────────────────
-
-function MarketSection() {
-  return (
-    <div className={`flex flex-col gap-5 ${SECTION_MIN_H}`}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        {marketIndices.map((idx, i) => (
-          <motion.div
-            key={idx.name}
-            initial={{ opacity: 0, y: 16, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.5, delay: i * 0.06, ease: EASE_OUT }}
-            className="rounded-2xl surface-card p-4 lg:p-5 hover:scale-[1.01] transition-transform duration-300"
-            style={{ boxShadow: CARD_SHADOW }}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] font-sans">{idx.name}</p>
-              <div className={`flex items-center gap-0.5 text-[11px] font-bold font-mono px-1.5 py-0.5 rounded-md ${idx.change >= 0 ? "text-fin-gain bg-fin-gain/8" : "text-fin-loss bg-fin-loss/8"}`}>
-                {idx.change >= 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
-                {idx.change > 0 ? "+" : ""}{idx.change}%
-              </div>
-            </div>
-            <p className="text-xl font-bold font-mono text-foreground mb-3 tracking-tight">{idx.value}</p>
-            <MiniSparkline data={idx.data} color={idx.change >= 0 ? C.gain : C.rose} height={36} />
-          </motion.div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        <SectionPanel>
-          <SectionHeader title="Top Movers" subtitle="Today's biggest changes" />
-          <div className="flex flex-col gap-2.5">
-            {topMovers.map((stock, i) => (
-              <motion.div
-                key={stock.ticker}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.35, delay: 0.15 + i * 0.05 }}
-                className="flex items-center justify-between p-3.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all duration-200 group"
-              >
-                <div className="flex items-center gap-3.5">
-                  <div className="size-9 rounded-xl bg-accent/60 flex items-center justify-center group-hover:bg-accent transition-colors">
-                    <span className="text-xs font-bold text-foreground font-mono">{stock.ticker.slice(0, 2)}</span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-foreground font-mono">{stock.ticker}</p>
-                    <p className="text-[11px] text-muted-foreground font-sans">{stock.name}</p>
-                  </div>
+              <div className="flex items-center gap-3.5">
+                <div className={`size-9 rounded-xl flex items-center justify-center ${
+                  alert.severity === "high" ? "bg-fin-loss/12 text-fin-loss" : alert.severity === "medium" ? "bg-chart-3/12 text-chart-3" : "bg-chart-2/12 text-chart-2"
+                }`}>
+                  {alert.type === "spike" ? <TrendingUp className="size-4" /> : alert.type === "cluster" ? <Layers className="size-4" /> : <Radio className="size-4" />}
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-mono font-bold text-foreground">${stock.price.toFixed(2)}</p>
-                  <p className={`text-[11px] font-mono font-bold ${stock.change >= 0 ? "text-fin-gain" : "text-fin-loss"}`}>
-                    {stock.change > 0 ? "+" : ""}{stock.change}%
+                <div>
+                  <p className="text-sm font-bold text-foreground font-sans">{alert.category}</p>
+                  <p className="text-[11px] text-muted-foreground font-sans flex items-center gap-1.5">
+                    <MapPin className="size-3" />{alert.location}
                   </p>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </SectionPanel>
-
-        <SectionPanel>
-          <SectionHeader title="Market Sentiment" subtitle="Aggregated indicators" />
-          <div className="flex flex-col gap-6">
-            {[
-              { label: "Fear & Greed Index", value: 68, display: "68 — Greed", color: C.gain },
-              { label: "VIX (Volatility)", value: 35, display: "14.2", color: C.amber },
-              { label: "Put/Call Ratio", value: 45, display: "0.82", color: C.azure },
-              { label: "Advance/Decline", value: 72, display: "1.84", color: C.teal },
-              { label: "New Highs/Lows", value: 62, display: "3.21", color: C.amber },
-            ].map((item, i) => (
-              <div key={i}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-muted-foreground font-sans font-medium">{item.label}</span>
-                  <span className="text-xs font-mono font-bold text-foreground">{item.display}</span>
-                </div>
-                <div className="h-2 rounded-full bg-muted/60 overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${item.value}%` }}
-                    transition={{ duration: 1, delay: 0.2 + i * 0.1, ease: EASE_OUT }}
-                    className="h-full rounded-full"
-                    style={{ background: item.color }}
-                  />
-                </div>
               </div>
-            ))}
-          </div>
-        </SectionPanel>
-      </div>
-    </div>
-  )
-}
-
-// ─── Section: Watchlist ─────────────────────────────────────────
-
-function WatchlistSection() {
-  return (
-    <div className={`flex flex-col gap-5 ${SECTION_MIN_H}`}>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        <KpiCard label="Watchlist Items" value="8" delay={0} icon={Eye} />
-        <KpiCard label="Avg. Change" value="1.08" suffix="%" change={1.08} delay={0.06} icon={TrendingUp} />
-        <KpiCard label="Top Gainer" value="SMCI" delay={0.12} icon={ArrowUpRight} />
-        <KpiCard label="Top Loser" value="TSLA" delay={0.18} icon={ArrowDownRight} />
-      </div>
-
-      <SectionPanel className="!p-0 overflow-hidden">
-        <div className="p-5 lg:p-6 border-b border-border/50 flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Your Watchlist</h3>
-            <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">Track your favorite assets</p>
-          </div>
-          <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
-            <Plus className="size-3.5" />Add Asset
-          </button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border/50">
-                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Asset</th>
-                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Price</th>
-                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Change</th>
-                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden md:table-cell">Volume</th>
-                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden lg:table-cell">P/E</th>
-                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden lg:table-cell">Mkt Cap</th>
-                <th className="text-center p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden sm:table-cell w-28">Trend</th>
-              </tr>
-            </thead>
-            <tbody>
-              {watchlistItems.map((item, i) => (
-                <motion.tr
-                  key={item.ticker}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.35, delay: 0.15 + i * 0.04 }}
-                  className="border-b border-border/30 hover:bg-accent/20 transition-all duration-200"
-                >
-                  <td className="p-4">
-                    <div className="flex items-center gap-3.5">
-                      <div className="size-9 rounded-xl bg-accent/60 flex items-center justify-center shrink-0">
-                        <span className="text-xs font-bold text-foreground font-mono">{item.ticker.slice(0, 2)}</span>
-                      </div>
-                      <div>
-                        <p className="text-sm font-bold font-mono text-foreground">{item.ticker}</p>
-                        <p className="text-[11px] text-muted-foreground hidden sm:block font-sans">{item.name}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4 text-right font-mono font-bold text-foreground">${item.price.toFixed(2)}</td>
-                  <td className="p-4 text-right">
-                    <span className={`inline-flex items-center gap-0.5 text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-md ${item.change >= 0 ? "text-fin-gain bg-fin-gain/8" : "text-fin-loss bg-fin-loss/8"}`}>
-                      {item.change >= 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
-                      {item.change > 0 ? "+" : ""}{item.change}%
-                    </span>
-                  </td>
-                  <td className="p-4 text-right text-xs font-mono text-muted-foreground hidden md:table-cell">{item.volume}</td>
-                  <td className="p-4 text-right text-xs font-mono text-muted-foreground hidden lg:table-cell">{item.pe}</td>
-                  <td className="p-4 text-right text-xs font-mono text-muted-foreground hidden lg:table-cell">{item.marketCap}</td>
-                  <td className="p-4 hidden sm:table-cell w-28">
-                    <MiniSparkline data={item.data} color={item.change >= 0 ? C.gain : C.rose} height={24} />
-                  </td>
-                </motion.tr>
-              ))}
-            </tbody>
-          </table>
+              <div className="text-right flex items-center gap-4">
+                <div>
+                  <p className="text-sm font-mono font-bold text-foreground">{alert.count} <span className="text-muted-foreground text-xs font-normal">/ {alert.baseline} baseline</span></p>
+                  <p className="text-[10px] text-muted-foreground font-mono">{alert.date}</p>
+                </div>
+                <SeverityBadge severity={alert.severity} />
+              </div>
+            </motion.div>
+          ))}
         </div>
       </SectionPanel>
     </div>
   )
 }
 
-// ─── Section: Reports ───────────────────────────────────────────
+// ─── Section: Case Detection ───────────────────────────────────
 
-function ReportsSection() {
+function CasesSection() {
   return (
     <div className={`flex flex-col gap-5 ${SECTION_MIN_H}`}>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
-        <KpiCard label="Total Reports" value="8" delay={0} icon={FileText} />
-        <KpiCard label="Generated This Month" value="5" delay={0.06} icon={Calendar} />
-        <KpiCard label="Total Dividends" value="2,330" prefix="$" delay={0.12} icon={DollarSign} />
-        <KpiCard label="Avg. Income/Mo" value="612" prefix="$" change={8.4} delay={0.18} icon={TrendingUp} />
+        <KpiCard label="Total Cases" value="36,818" change={18.9} delay={0} icon={Scale} />
+        <KpiCard label="This Week" value="2,847" change={12.3} delay={0.06} icon={Calendar} />
+        <KpiCard label="Categories" value="14" delay={0.12} icon={Layers} />
+        <KpiCard label="Avg Confidence" value="87.2" suffix="%" delay={0.18} icon={Target} />
       </div>
-
-      <SectionPanel className="relative overflow-hidden">
-        <GlowOrb className="w-48 h-48 -top-24 -right-24 bg-primary/6" />
-        <SectionHeader title="Income Breakdown" subtitle="Dividends, interest, and other income sources">
-          <div className="flex items-center gap-5 text-[11px]">
-            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.teal }} /><span className="text-muted-foreground font-sans">Dividends</span></div>
-            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.azure }} /><span className="text-muted-foreground font-sans">Interest</span></div>
-            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.amber }} /><span className="text-muted-foreground font-sans">Other</span></div>
-          </div>
-        </SectionHeader>
-        <div className="h-60">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={incomeByMonth} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={C.grid} vertical={false} />
-              <XAxis dataKey="month" tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${v}`} />
-              <Tooltip content={<ChartTooltipContent />} />
-              <Bar dataKey="dividends" name="dividends" stackId="income" fill={C.teal} animationDuration={900} />
-              <Bar dataKey="interest" name="interest" stackId="income" fill={C.azure} animationDuration={900} />
-              <Bar dataKey="other" name="other" stackId="income" fill={C.amber} radius={[6, 6, 0, 0]} animationDuration={900} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </SectionPanel>
 
       <SectionPanel className="!p-0 overflow-hidden">
         <div className="p-5 lg:p-6 border-b border-border/50 flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Available Reports</h3>
-            <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">Download or generate new financial reports</p>
+            <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Case Type Classifications</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">14 social justice categories from Legal-BERT classifier</p>
           </div>
           <div className="flex items-center gap-2">
             <button className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-xl surface-card hover:bg-accent/50 font-sans">
               <Filter className="size-3.5" />Filter
             </button>
             <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
-              <Plus className="size-3.5" />Generate
+              <Download className="size-3.5" />Export
             </button>
           </div>
         </div>
@@ -879,50 +506,613 @@ function ReportsSection() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border/50">
-                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Report</th>
-                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden sm:table-cell">Type</th>
-                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden md:table-cell">Date</th>
-                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden lg:table-cell">Size</th>
-                <th className="text-center p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Status</th>
-                <th className="text-center p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Action</th>
+                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Category</th>
+                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Count</th>
+                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Trend</th>
+                <th className="text-center p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden sm:table-cell w-32">Volume</th>
               </tr>
             </thead>
             <tbody>
-              {reportsData.map((report, i) => (
+              {caseTypes.map((caseType, i) => (
                 <motion.tr
-                  key={report.id}
+                  key={caseType.id}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.35, delay: 0.2 + i * 0.04 }}
+                  transition={{ duration: 0.35, delay: 0.15 + i * 0.03 }}
                   className="border-b border-border/30 hover:bg-accent/20 transition-all duration-200"
                 >
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-lg bg-accent/40 flex items-center justify-center shrink-0"><FileText className="size-4 text-muted-foreground" /></div>
-                      <span className="text-[13px] font-semibold text-foreground truncate max-w-64 font-sans">{report.name}</span>
+                      <div className="size-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+                        <span className="text-[10px] font-bold text-primary font-mono">{caseType.id}</span>
+                      </div>
+                      <span className="text-[13px] font-semibold text-foreground font-sans">{caseType.name}</span>
                     </div>
                   </td>
+                  <td className="p-4 text-right font-mono font-bold text-foreground">{caseType.count.toLocaleString()}</td>
+                  <td className="p-4 text-right">
+                    <span className={`inline-flex items-center gap-0.5 text-[11px] font-mono font-bold px-1.5 py-0.5 rounded-md ${caseType.trend >= 0 ? "text-fin-gain bg-fin-gain/8" : "text-fin-loss bg-fin-loss/8"}`}>
+                      {caseType.trend >= 0 ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
+                      {caseType.trend > 0 ? "+" : ""}{caseType.trend}%
+                    </span>
+                  </td>
                   <td className="p-4 hidden sm:table-cell">
-                    <span className="text-[11px] text-muted-foreground bg-muted/40 px-2.5 py-1 rounded-lg font-medium font-sans">{report.type}</span>
-                  </td>
-                  <td className="p-4 text-xs font-mono text-muted-foreground hidden md:table-cell">{report.date}</td>
-                  <td className="p-4 text-xs font-mono text-muted-foreground hidden lg:table-cell">{report.size}</td>
-                  <td className="p-4 text-center">
-                    {report.status === "ready" ? (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-fin-gain bg-fin-gain/8 px-2.5 py-1 rounded-lg"><Check className="size-3" />Ready</span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-chart-3 bg-chart-3/8 px-2.5 py-1 rounded-lg"><div className="size-2 rounded-full bg-chart-3 animate-pulse" />Generating</span>
-                    )}
-                  </td>
-                  <td className="p-4 text-center">
-                    <button disabled={report.status !== "ready"} className="p-2 rounded-lg hover:bg-accent transition-colors disabled:opacity-25 disabled:cursor-not-allowed" aria-label={`Download ${report.name}`}>
-                      <Download className="size-4 text-muted-foreground" />
-                    </button>
+                    <div className="h-2 rounded-full bg-muted/60 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(caseType.count / 6789) * 100}%` }}
+                        transition={{ duration: 1, delay: 0.3 + i * 0.05, ease: EASE_OUT }}
+                        className="h-full rounded-full bg-primary"
+                      />
+                    </div>
                   </td>
                 </motion.tr>
               ))}
             </tbody>
           </table>
+        </div>
+      </SectionPanel>
+    </div>
+  )
+}
+
+// ─── Section: Anomalies ────────────────────────────────────────
+
+function AnomaliesSection() {
+  return (
+    <div className={`flex flex-col gap-5 ${SECTION_MIN_H}`}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <KpiCard label="Active Alerts" value="47" change={32.1} delay={0} icon={AlertTriangle} />
+        <KpiCard label="High Severity" value="12" delay={0.06} icon={AlertCircle} />
+        <KpiCard label="Clusters Found" value="8" delay={0.12} icon={Layers} />
+        <KpiCard label="Emerging Topics" value="3" delay={0.18} icon={Radio} />
+      </div>
+
+      <SectionPanel className="relative overflow-hidden">
+        <GlowOrb className="w-48 h-48 -top-24 -left-24 bg-fin-loss/6" />
+        <SectionHeader title="Time Series Anomaly Detection" subtitle="Housing Discrimination — ZIP 11237 (Bushwick)">
+          <div className="flex items-center gap-5 text-[11px]">
+            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.teal }} /><span className="text-muted-foreground font-sans">Actual</span></div>
+            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.slate }} /><span className="text-muted-foreground font-sans">Expected</span></div>
+            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.rose }} /><span className="text-muted-foreground font-sans">Threshold (μ+2σ)</span></div>
+          </div>
+        </SectionHeader>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={timeSeriesAnomaly} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={C.grid} vertical={false} />
+              <XAxis dataKey="week" tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} />
+              <Tooltip content={<ChartTooltipContent />} />
+              <Line type="monotone" dataKey="expected" name="expected" stroke={C.slate} strokeWidth={2} dot={false} strokeDasharray="6 3" animationDuration={1100} />
+              <Line type="monotone" dataKey="threshold" name="threshold" stroke={C.rose} strokeWidth={1.5} dot={false} strokeDasharray="4 4" animationDuration={1100} />
+              <Line type="monotone" dataKey="actual" name="actual" stroke={C.teal} strokeWidth={2.5} dot={{ fill: C.teal, r: 3 }} animationDuration={1100} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="mt-4 p-4 rounded-xl bg-fin-loss/5 border border-fin-loss/20">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="size-5 text-fin-loss shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-foreground font-sans">Anomaly Detected: Week 9-12</p>
+              <p className="text-xs text-muted-foreground mt-1 font-sans leading-relaxed">
+                Complaint volume exceeded 2σ threshold for 4 consecutive weeks. Pattern suggests systemic issue with entity: <span className="font-semibold text-foreground">Apex Property Management</span>. 
+                Recommend media placement in Bushwick targeting housing discrimination awareness.
+              </p>
+            </div>
+          </div>
+        </div>
+      </SectionPanel>
+
+      <SectionPanel className="!p-0 overflow-hidden">
+        <div className="p-5 lg:p-6 border-b border-border/50">
+          <SectionHeader title="All Anomaly Alerts" subtitle="Sorted by severity and recency" />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/50">
+                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Type</th>
+                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Category</th>
+                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden md:table-cell">Location</th>
+                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Count</th>
+                <th className="text-center p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Severity</th>
+                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden lg:table-cell">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {anomalyAlerts.map((alert, i) => (
+                <motion.tr
+                  key={alert.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.35, delay: 0.15 + i * 0.04 }}
+                  className="border-b border-border/30 hover:bg-accent/20 transition-all duration-200"
+                >
+                  <td className="p-4">
+                    <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg capitalize ${
+                      alert.type === "spike" ? "bg-chart-3/10 text-chart-3" : alert.type === "cluster" ? "bg-chart-2/10 text-chart-2" : "bg-primary/10 text-primary"
+                    }`}>
+                      {alert.type === "spike" ? <TrendingUp className="size-3" /> : alert.type === "cluster" ? <Layers className="size-3" /> : <Radio className="size-3" />}
+                      {alert.type}
+                    </span>
+                  </td>
+                  <td className="p-4"><span className="font-semibold text-foreground font-sans">{alert.category}</span></td>
+                  <td className="p-4 text-muted-foreground font-mono text-xs hidden md:table-cell">{alert.location}</td>
+                  <td className="p-4 text-right">
+                    <span className="font-mono font-bold text-foreground">{alert.count}</span>
+                    <span className="text-muted-foreground text-xs font-normal"> / {alert.baseline}</span>
+                  </td>
+                  <td className="p-4 text-center"><SeverityBadge severity={alert.severity} /></td>
+                  <td className="p-4 text-right text-xs text-muted-foreground hidden lg:table-cell font-mono">{alert.date} <span className="text-muted-foreground/50">{alert.time}</span></td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SectionPanel>
+    </div>
+  )
+}
+
+// ─── Section: Entities ─────────────────────────────────────────
+
+function EntitiesSection() {
+  return (
+    <div className={`flex flex-col gap-5 ${SECTION_MIN_H}`}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <KpiCard label="Entities Extracted" value="24,891" change={22.4} delay={0} icon={Users} />
+        <KpiCard label="Organizations" value="3,456" delay={0.06} icon={Building2} />
+        <KpiCard label="Active Clusters" value="42" change={15.8} delay={0.12} icon={Layers} />
+        <KpiCard label="Avg Cluster Size" value="18.4" suffix=" docs" delay={0.18} icon={Hash} />
+      </div>
+
+      <SectionPanel>
+        <SectionHeader title="Entity Type Distribution" subtitle="Named entities extracted via SpaCy NER" />
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          {[
+            { type: "LOC", label: "Location", count: 8945, example: "Bushwick, 11237", color: C.teal },
+            { type: "ORG", label: "Organization", count: 3456, example: "Apex Property Mgmt", color: C.azure },
+            { type: "DEM", label: "Demographic", count: 5621, example: "as a Black woman", color: C.coral },
+            { type: "MON", label: "Monetary", count: 4123, example: "$4,200 unpaid", color: C.amber },
+            { type: "TIME", label: "Temporal", count: 2746, example: "since Jan 2025", color: C.indigo },
+          ].map((entity, i) => (
+            <motion.div
+              key={entity.type}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: i * 0.06 }}
+              className="p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <div className="size-6 rounded-lg flex items-center justify-center" style={{ background: `${entity.color}20` }}>
+                  <span className="text-[9px] font-bold font-mono" style={{ color: entity.color }}>{entity.type}</span>
+                </div>
+                <span className="text-xs font-semibold text-foreground font-sans">{entity.label}</span>
+              </div>
+              <p className="text-xl font-bold font-mono text-foreground">{entity.count.toLocaleString()}</p>
+              <p className="text-[10px] text-muted-foreground mt-1 font-mono truncate">{entity.example}</p>
+            </motion.div>
+          ))}
+        </div>
+      </SectionPanel>
+
+      <SectionPanel className="!p-0 overflow-hidden">
+        <div className="p-5 lg:p-6 border-b border-border/50 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Entity Clusters (DBSCAN)</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">Organizations with 5+ related complaints — potential class action targets</p>
+          </div>
+          <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
+            <Target className="size-3.5" />Generate Report
+          </button>
+        </div>
+        <div className="divide-y divide-border/30">
+          {entityClusters.map((cluster, i) => (
+            <motion.div
+              key={cluster.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.35, delay: 0.15 + i * 0.05 }}
+              className="p-5 hover:bg-accent/20 transition-all duration-200"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <Building2 className="size-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground font-sans">{cluster.entity}</p>
+                      <p className="text-[11px] text-muted-foreground font-mono">{cluster.type} — {cluster.cases} related documents</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    {cluster.categories.map((cat, j) => (
+                      <span key={j} className="text-[10px] font-medium bg-muted/50 text-muted-foreground px-2 py-0.5 rounded-md font-sans">{cat}</span>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-1.5 mt-2 text-[11px] text-muted-foreground font-sans">
+                    <MapPin className="size-3" />
+                    <span>ZIP codes: {cluster.locations.join(", ")}</span>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="flex items-center gap-1.5 justify-end">
+                    <span className="text-xs text-muted-foreground font-sans">Confidence</span>
+                    <span className="text-sm font-bold font-mono text-fin-gain">{(cluster.confidence * 100).toFixed(0)}%</span>
+                  </div>
+                  <div className="h-1.5 w-20 rounded-full bg-muted/60 overflow-hidden mt-2">
+                    <div className="h-full rounded-full bg-fin-gain" style={{ width: `${cluster.confidence * 100}%` }} />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </SectionPanel>
+    </div>
+  )
+}
+
+// ─── Section: Media Recommendations ────────────────────────────
+
+function MediaSection() {
+  return (
+    <div className={`flex flex-col gap-5 ${SECTION_MIN_H}`}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <KpiCard label="Recommendations" value="156" change={28.4} delay={0} icon={Megaphone} />
+        <KpiCard label="Est. Total Reach" value="2.4M" delay={0.06} icon={Globe} />
+        <KpiCard label="Avg CPM" value="$7.80" delay={0.12} icon={Target} />
+        <KpiCard label="Relevance Score" value="87" suffix="%" delay={0.18} icon={Zap} />
+      </div>
+
+      {/* Vertical selector */}
+      <SectionPanel>
+        <SectionHeader title="Industry Vertical" subtitle="Select target market for recommendations" />
+        <div className="flex gap-3">
+          {verticalTabs.map((tab) => {
+            const Icon = tab.icon
+            return (
+              <button
+                key={tab.id}
+                className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 font-sans ${
+                  tab.active ? "bg-primary/10 text-primary border border-primary/20" : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
+                }`}
+              >
+                <Icon className="size-4" />
+                {tab.label}
+                {!tab.active && <span className="text-[10px] bg-muted/60 px-1.5 py-0.5 rounded font-mono">Soon</span>}
+              </button>
+            )
+          })}
+        </div>
+      </SectionPanel>
+
+      <SectionPanel className="!p-0 overflow-hidden">
+        <div className="p-5 lg:p-6 border-b border-border/50 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Media Placement Recommendations</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">AI-generated media buy suggestions based on detected patterns</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-xl surface-card hover:bg-accent/50 font-sans">
+              <Filter className="size-3.5" />Filter
+            </button>
+            <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
+              <Download className="size-3.5" />Export
+            </button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/50">
+                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Channel</th>
+                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Target Audience</th>
+                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden md:table-cell">Case Type</th>
+                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Reach</th>
+                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden lg:table-cell">CPM</th>
+                <th className="text-center p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Relevance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {mediaRecommendations.map((rec, i) => (
+                <motion.tr
+                  key={rec.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.35, delay: 0.15 + i * 0.04 }}
+                  className="border-b border-border/30 hover:bg-accent/20 transition-all duration-200"
+                >
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="size-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+                        <Megaphone className="size-4 text-primary" />
+                      </div>
+                      <span className="font-semibold text-foreground font-sans">{rec.channel}</span>
+                    </div>
+                  </td>
+                  <td className="p-4 text-muted-foreground font-sans text-xs">{rec.audience}</td>
+                  <td className="p-4 hidden md:table-cell">
+                    <span className="text-[11px] bg-muted/40 text-muted-foreground px-2.5 py-1 rounded-lg font-medium font-sans">{rec.caseType}</span>
+                  </td>
+                  <td className="p-4 text-right font-mono font-bold text-foreground">{rec.reach}</td>
+                  <td className="p-4 text-right font-mono text-muted-foreground hidden lg:table-cell">{rec.cpm}</td>
+                  <td className="p-4 text-center">
+                    <div className="inline-flex items-center gap-1.5">
+                      <div className="h-1.5 w-12 rounded-full bg-muted/60 overflow-hidden">
+                        <div className="h-full rounded-full bg-fin-gain" style={{ width: `${rec.relevance}%` }} />
+                      </div>
+                      <span className="text-xs font-mono font-bold text-fin-gain">{rec.relevance}%</span>
+                    </div>
+                  </td>
+                </motion.tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SectionPanel>
+
+      <SectionPanel>
+        <SectionHeader title="Campaign Messaging Guidelines" subtitle="Compliant messaging for &quot;Know Your Rights&quot; campaigns" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-4 rounded-xl bg-fin-gain/5 border border-fin-gain/20">
+            <div className="flex items-center gap-2 mb-2">
+              <Check className="size-4 text-fin-gain" />
+              <span className="text-sm font-bold text-foreground font-sans">Do</span>
+            </div>
+            <ul className="text-xs text-muted-foreground space-y-1.5 font-sans">
+              <li>Focus on educational &quot;Know Your Rights&quot; messaging</li>
+              <li>Use broad, compliant outreach language</li>
+              <li>Reference general legal resources</li>
+              <li>Target geographic areas, not individuals</li>
+            </ul>
+          </div>
+          <div className="p-4 rounded-xl bg-fin-loss/5 border border-fin-loss/20">
+            <div className="flex items-center gap-2 mb-2">
+              <X className="size-4 text-fin-loss" />
+              <span className="text-sm font-bold text-foreground font-sans">{"Don't"}</span>
+            </div>
+            <ul className="text-xs text-muted-foreground space-y-1.5 font-sans">
+              <li>Micro-target specific individuals</li>
+              <li>Make direct solicitation claims</li>
+              <li>Promise case outcomes or settlements</li>
+              <li>Use collected PII for targeting</li>
+            </ul>
+          </div>
+        </div>
+      </SectionPanel>
+    </div>
+  )
+}
+
+// ─── Section: Data Sources ─────────────────────────────────────
+
+function SourcesSection() {
+  return (
+    <div className={`flex flex-col gap-5 ${SECTION_MIN_H}`}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <KpiCard label="Total Documents" value="1.87M" change={14.2} delay={0} icon={Database} />
+        <KpiCard label="Active Sources" value="6" delay={0.06} icon={Radio} />
+        <KpiCard label="Dedup Rate" value="4.2" suffix="%" delay={0.12} icon={Layers} />
+        <KpiCard label="Avg Latency" value="2.4" suffix="s" delay={0.18} icon={Zap} />
+      </div>
+
+      <SectionPanel className="!p-0 overflow-hidden">
+        <div className="p-5 lg:p-6 border-b border-border/50 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Data Ingestion Pipeline</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">6 source categories with unified schema normalization</p>
+          </div>
+          <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
+            <Plus className="size-3.5" />Add Source
+          </button>
+        </div>
+        <div className="divide-y divide-border/30">
+          {dataSources.map((source, i) => (
+            <motion.div
+              key={source.name}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.35, delay: 0.15 + i * 0.05 }}
+              className="p-5 hover:bg-accent/20 transition-all duration-200"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={`size-10 rounded-xl flex items-center justify-center ${
+                    source.status === "active" ? "bg-fin-gain/10" : "bg-chart-3/10"
+                  }`}>
+                    <Database className={`size-5 ${source.status === "active" ? "text-fin-gain" : "text-chart-3"}`} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-bold text-foreground font-sans">{source.name}</p>
+                      <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                        source.status === "active" ? "bg-fin-gain/10 text-fin-gain" : "bg-chart-3/10 text-chart-3"
+                      }`}>
+                        {source.status === "active" ? <Check className="size-2.5" /> : <CircleDot className="size-2.5 animate-pulse" />}
+                        {source.status}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground font-mono mt-0.5">Last sync: {source.lastSync}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-8">
+                  <div className="text-right hidden sm:block">
+                    <p className="text-sm font-bold font-mono text-foreground">{source.documents.toLocaleString()}</p>
+                    <p className="text-[10px] text-muted-foreground font-sans">documents</p>
+                  </div>
+                  <div className="text-right hidden md:block">
+                    <p className="text-sm font-semibold text-foreground font-sans">{source.refresh}</p>
+                    <p className="text-[10px] text-muted-foreground font-sans">refresh rate</p>
+                  </div>
+                  <button className="p-2 rounded-lg hover:bg-accent transition-colors" aria-label={`Settings for ${source.name}`}>
+                    <Settings className="size-4 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </SectionPanel>
+
+      <SectionPanel>
+        <SectionHeader title="Unified Document Schema" subtitle="PostgreSQL with pgvector extension" />
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border/50">
+                <th className="text-left p-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-mono">Field</th>
+                <th className="text-left p-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-mono">Type</th>
+                <th className="text-left p-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Description</th>
+              </tr>
+            </thead>
+            <tbody className="font-mono">
+              {[
+                { field: "doc_id", type: "UUID", desc: "Primary key" },
+                { field: "source", type: "ENUM", desc: "One of six source categories" },
+                { field: "raw_text", type: "TEXT", desc: "Full text content" },
+                { field: "timestamp", type: "TIMESTAMP", desc: "Original posting or filing date" },
+                { field: "geo_zip", type: "VARCHAR(5)", desc: "ZIP code, extracted or inferred" },
+                { field: "embedding", type: "VECTOR(768)", desc: "Legal-BERT [CLS] token embedding" },
+                { field: "metadata", type: "JSONB", desc: "Source-specific fields" },
+              ].map((row, i) => (
+                <tr key={i} className="border-b border-border/30">
+                  <td className="p-3 text-primary font-semibold">{row.field}</td>
+                  <td className="p-3 text-muted-foreground">{row.type}</td>
+                  <td className="p-3 text-muted-foreground font-sans">{row.desc}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </SectionPanel>
+    </div>
+  )
+}
+
+// ─── Section: Model Performance ────────────────────────────────
+
+function ModelSection() {
+  return (
+    <div className={`flex flex-col gap-5 ${SECTION_MIN_H}`}>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <KpiCard label="Macro F1 Score" value="0.86" delay={0} icon={Cpu} />
+        <KpiCard label="Micro F1 Score" value="0.89" delay={0.06} icon={Target} />
+        <KpiCard label="Training Samples" value="25,000" delay={0.12} icon={FileText} />
+        <KpiCard label="Categories" value="14" delay={0.18} icon={Layers} />
+      </div>
+
+      <SectionPanel className="relative overflow-hidden">
+        <GlowOrb className="w-48 h-48 -top-24 -right-24 bg-primary/6" />
+        <SectionHeader title="Model Architecture" subtitle="Fine-tuned Legal-BERT with multi-label classification head">
+          <span className="text-[10px] font-mono bg-muted/50 px-2.5 py-1 rounded-lg text-muted-foreground">nlpaueb/legal-bert-base-uncased</span>
+        </SectionHeader>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: "Layers", value: "12" },
+            { label: "Hidden Dim", value: "768" },
+            { label: "Attention Heads", value: "12" },
+            { label: "Parameters", value: "110M" },
+          ].map((spec, i) => (
+            <div key={i} className="p-4 rounded-xl bg-muted/30">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.06em] font-sans">{spec.label}</p>
+              <p className="text-xl font-bold font-mono text-foreground mt-1">{spec.value}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-5 p-4 rounded-xl bg-muted/20 border border-border/30">
+          <p className="text-xs text-muted-foreground font-sans leading-relaxed">
+            <span className="font-semibold text-foreground">Training Configuration:</span> NVIDIA A100 (80GB HBM2e) via Google Colab Pro+. 
+            AdamW optimizer (β₁=0.9, β₂=0.999), learning rate 2×10⁻⁵ with linear warmup, mixed precision (FP16), batch size 64, 8 epochs.
+          </p>
+        </div>
+      </SectionPanel>
+
+      <SectionPanel className="!p-0 overflow-hidden">
+        <div className="p-5 lg:p-6 border-b border-border/50 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Per-Category Performance</h3>
+            <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">Target: F₁ ≥ 0.80 for deployment</p>
+          </div>
+          <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
+            <Activity className="size-3.5" />Retrain Model
+          </button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/50">
+                <th className="text-left p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Category</th>
+                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Precision</th>
+                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Recall</th>
+                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">F1 Score</th>
+                <th className="text-right p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans hidden md:table-cell">Samples</th>
+                <th className="text-center p-4 text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {modelMetrics.map((metric, i) => {
+                const meetsThreshold = metric.f1 >= 0.80
+                return (
+                  <motion.tr
+                    key={metric.category}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.35, delay: 0.15 + i * 0.04 }}
+                    className="border-b border-border/30 hover:bg-accent/20 transition-all duration-200"
+                  >
+                    <td className="p-4"><span className="font-semibold text-foreground font-sans">{metric.category}</span></td>
+                    <td className="p-4 text-right font-mono text-muted-foreground">{metric.precision.toFixed(2)}</td>
+                    <td className="p-4 text-right font-mono text-muted-foreground">{metric.recall.toFixed(2)}</td>
+                    <td className="p-4 text-right">
+                      <span className={`font-mono font-bold ${meetsThreshold ? "text-fin-gain" : "text-fin-loss"}`}>
+                        {metric.f1.toFixed(2)}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right font-mono text-muted-foreground hidden md:table-cell">{metric.samples.toLocaleString()}</td>
+                    <td className="p-4 text-center">
+                      {meetsThreshold ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-fin-gain bg-fin-gain/8 px-2.5 py-1 rounded-lg"><Check className="size-3" />Ready</span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-fin-loss bg-fin-loss/8 px-2.5 py-1 rounded-lg"><AlertTriangle className="size-3" />Needs Data</span>
+                      )}
+                    </td>
+                  </motion.tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </SectionPanel>
+
+      <SectionPanel>
+        <SectionHeader title="Training Pipeline" subtitle="Three-tier labeling strategy" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            { tier: "Tier 1", label: "Court Records", desc: "PACER/NYSCEF NOS codes", samples: "15-20k", status: "gold" },
+            { tier: "Tier 2", label: "LLM-Assisted", desc: "Claude API with structured prompts", samples: "Full corpus", status: "silver" },
+            { tier: "Tier 3", label: "Human Review", desc: "Cornell Law students via Label Studio", samples: "25k target", status: "gold" },
+          ].map((tier, i) => (
+            <motion.div
+              key={tier.tier}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: i * 0.1 }}
+              className="p-4 rounded-xl bg-muted/30 border border-border/30"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded font-mono">{tier.tier}</span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                  tier.status === "gold" ? "bg-amber-500/10 text-amber-500" : "bg-slate-400/10 text-slate-400"
+                }`}>{tier.status}</span>
+              </div>
+              <p className="text-sm font-bold text-foreground font-sans">{tier.label}</p>
+              <p className="text-[11px] text-muted-foreground mt-1 font-sans">{tier.desc}</p>
+              <p className="text-xs font-mono text-muted-foreground mt-2">{tier.samples} samples</p>
+            </motion.div>
+          ))}
         </div>
       </SectionPanel>
     </div>
@@ -935,7 +1125,7 @@ function SettingsSection() {
   const [activeTab, setActiveTab] = useState("profile")
   const tabs = [
     { id: "profile", label: "Profile", icon: UserCog },
-    { id: "notifications", label: "Notifications", icon: BellRing },
+    { id: "notifications", label: "Alerts", icon: BellRing },
     { id: "security", label: "Security", icon: Lock },
     { id: "display", label: "Display", icon: Monitor },
     { id: "billing", label: "Billing", icon: CreditCard },
@@ -946,7 +1136,7 @@ function SettingsSection() {
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="rounded-2xl surface-card p-5 lg:p-6 relative overflow-hidden" style={{ boxShadow: CARD_SHADOW }}>
         <GlowOrb className="w-48 h-48 -top-24 -right-24 bg-primary/6" />
         <h3 className="text-lg font-bold text-foreground font-display tracking-tight">Account Settings</h3>
-        <p className="text-xs text-muted-foreground mt-1 font-sans">Manage your profile, preferences, and security</p>
+        <p className="text-xs text-muted-foreground mt-1 font-sans">Manage your profile, alert preferences, and security</p>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
@@ -976,17 +1166,17 @@ function SettingsSection() {
             <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
               {activeTab === "profile" && (
                 <div className="flex flex-col gap-6">
-                  <div><h4 className="text-sm font-bold text-foreground font-display">Personal Information</h4><p className="text-xs text-muted-foreground mt-0.5 font-sans">Update your personal details</p></div>
+                  <div><h4 className="text-sm font-bold text-foreground font-display">Team Information</h4><p className="text-xs text-muted-foreground mt-0.5 font-sans">Manage your organization details</p></div>
                   <div className="flex items-center gap-4">
-                    <div className="size-16 rounded-2xl bg-primary/15 flex items-center justify-center glow-teal-sm"><span className="text-lg font-bold text-primary font-display">JD</span></div>
-                    <div><p className="text-sm font-bold text-foreground font-display">John Doe</p><p className="text-xs text-muted-foreground font-sans">Premium Account</p></div>
+                    <div className="size-16 rounded-2xl bg-primary/15 flex items-center justify-center glow-teal-sm"><span className="text-lg font-bold text-primary font-display">LM</span></div>
+                    <div><p className="text-sm font-bold text-foreground font-display">Limira Team 38</p><p className="text-xs text-muted-foreground font-sans">Cornell Tech — Enterprise Plan</p></div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {[
-                      { label: "Full Name", value: "John Doe", icon: UserCog },
-                      { label: "Email", value: "john.doe@meridian.io", icon: Mail },
-                      { label: "Phone", value: "+1 (555) 123-4567", icon: HelpCircle },
-                      { label: "Language", value: "English (US)", icon: Languages },
+                      { label: "Organization", value: "Limira Inc.", icon: Building2 },
+                      { label: "Email", value: "team@limira.ai", icon: Mail },
+                      { label: "API Usage", value: "847,000 / 1M calls", icon: Cpu },
+                      { label: "Region", value: "US-East (NYC)", icon: Globe },
                     ].map((field, i) => (
                       <div key={i} className="flex flex-col gap-2">
                         <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] font-sans">{field.label}</label>
@@ -1001,14 +1191,14 @@ function SettingsSection() {
               )}
               {activeTab === "notifications" && (
                 <div className="flex flex-col gap-6">
-                  <div><h4 className="text-sm font-bold text-foreground font-display">Notification Preferences</h4><p className="text-xs text-muted-foreground mt-0.5 font-sans">Choose how you want to be notified</p></div>
+                  <div><h4 className="text-sm font-bold text-foreground font-display">Alert Preferences</h4><p className="text-xs text-muted-foreground mt-0.5 font-sans">Choose how you want to be notified about anomalies</p></div>
                   {[
-                    { label: "Price Alerts", desc: "Get notified when a stock hits your target price", enabled: true },
-                    { label: "Trade Confirmations", desc: "Receive confirmation when orders are executed", enabled: true },
-                    { label: "Portfolio Rebalance", desc: "Alerts when portfolio drifts from target allocation", enabled: true },
-                    { label: "Dividend Payments", desc: "Notifications for incoming dividend payments", enabled: false },
-                    { label: "Market News", desc: "Breaking news affecting your holdings", enabled: false },
-                    { label: "Weekly Summary", desc: "Weekly performance recap sent via email", enabled: true },
+                    { label: "High Severity Anomalies", desc: "Immediate alerts for spikes exceeding 3σ", enabled: true },
+                    { label: "New Entity Clusters", desc: "When DBSCAN detects new organization patterns", enabled: true },
+                    { label: "Emerging Topics", desc: "BERTopic alerts for new discussion themes", enabled: true },
+                    { label: "Model Drift Alerts", desc: "When classification confidence drops below threshold", enabled: false },
+                    { label: "Data Source Issues", desc: "Sync failures or API rate limiting", enabled: true },
+                    { label: "Weekly Summary", desc: "Aggregated analytics report via email", enabled: true },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center justify-between py-1">
                       <div><p className="text-sm font-semibold text-foreground font-sans">{item.label}</p><p className="text-xs text-muted-foreground mt-0.5 font-sans">{item.desc}</p></div>
@@ -1021,12 +1211,12 @@ function SettingsSection() {
               )}
               {activeTab === "security" && (
                 <div className="flex flex-col gap-5">
-                  <div><h4 className="text-sm font-bold text-foreground font-display">Security Settings</h4><p className="text-xs text-muted-foreground mt-0.5 font-sans">Manage your account security</p></div>
+                  <div><h4 className="text-sm font-bold text-foreground font-display">Security Settings</h4><p className="text-xs text-muted-foreground mt-0.5 font-sans">Manage API keys and access controls</p></div>
                   {[
-                    { label: "Two-Factor Authentication", desc: "Add an extra layer of security to your account", status: "Enabled", statusColor: "text-fin-gain" },
-                    { label: "Password", desc: "Last changed 45 days ago", status: "Update", statusColor: "text-primary" },
-                    { label: "Active Sessions", desc: "2 devices currently logged in", status: "Manage", statusColor: "text-primary" },
-                    { label: "API Keys", desc: "3 active API keys", status: "View", statusColor: "text-primary" },
+                    { label: "Two-Factor Authentication", desc: "Required for all team members", status: "Enabled", statusColor: "text-fin-gain" },
+                    { label: "API Keys", desc: "3 active keys for data ingestion", status: "Manage", statusColor: "text-primary" },
+                    { label: "IP Allowlist", desc: "Restrict access to approved IPs", status: "Configure", statusColor: "text-primary" },
+                    { label: "Audit Logs", desc: "Track all data access and exports", status: "View", statusColor: "text-primary" },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-border/30">
                       <div className="flex items-center gap-3.5">
@@ -1040,12 +1230,12 @@ function SettingsSection() {
               )}
               {activeTab === "display" && (
                 <div className="flex flex-col gap-5">
-                  <div><h4 className="text-sm font-bold text-foreground font-display">Display Preferences</h4><p className="text-xs text-muted-foreground mt-0.5 font-sans">Customize how the dashboard looks</p></div>
+                  <div><h4 className="text-sm font-bold text-foreground font-display">Display Preferences</h4><p className="text-xs text-muted-foreground mt-0.5 font-sans">Customize your dashboard experience</p></div>
                   {[
                     { label: "Theme", desc: "Choose your preferred color scheme", value: "Dark", icon: Palette },
-                    { label: "Currency", desc: "Default display currency", value: "USD ($)", icon: DollarSign },
+                    { label: "Default View", desc: "Landing section on login", value: "Overview", icon: Eye },
                     { label: "Date Format", desc: "How dates are displayed", value: "YYYY-MM-DD", icon: Calendar },
-                    { label: "Default Chart Type", desc: "Preferred chart visualization", value: "Area Chart", icon: BarChart3 },
+                    { label: "Chart Animations", desc: "Enable smooth chart transitions", value: "Enabled", icon: Activity },
                   ].map((item, i) => {
                     const Icon = item.icon
                     return (
@@ -1062,23 +1252,20 @@ function SettingsSection() {
               )}
               {activeTab === "billing" && (
                 <div className="flex flex-col gap-6">
-                  <div><h4 className="text-sm font-bold text-foreground font-display">Billing & Subscription</h4><p className="text-xs text-muted-foreground mt-0.5 font-sans">Manage your plan and payment methods</p></div>
+                  <div><h4 className="text-sm font-bold text-foreground font-display">Billing & Subscription</h4><p className="text-xs text-muted-foreground mt-0.5 font-sans">Manage your plan and API usage</p></div>
                   <div className="rounded-xl bg-primary/6 border border-primary/15 p-5 flex items-center justify-between glow-teal-sm">
                     <div className="flex items-center gap-4">
-                      <div className="size-12 rounded-xl bg-primary/12 flex items-center justify-center"><Star className="size-5 text-primary" /></div>
-                      <div><p className="text-sm font-bold text-foreground font-display">Premium Plan</p><p className="text-xs text-muted-foreground font-sans">$29.99/month — Renews Mar 15, 2026</p></div>
+                      <div className="size-12 rounded-xl bg-primary/12 flex items-center justify-center"><Scale className="size-5 text-primary" /></div>
+                      <div><p className="text-sm font-bold text-foreground font-display">Enterprise Plan</p><p className="text-xs text-muted-foreground font-sans">1M API calls/month — Renews Mar 1, 2026</p></div>
                     </div>
                     <button className="text-xs font-bold text-primary hover:underline font-sans">Manage Plan</button>
                   </div>
                   <div className="flex flex-col gap-3">
-                    <h5 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">Payment Method</h5>
-                    <div className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-border/30">
-                      <div className="flex items-center gap-3.5">
-                        <CreditCard className="size-4 text-muted-foreground" />
-                        <div><p className="text-sm font-semibold text-foreground font-sans">Visa ending in 4242</p><p className="text-xs text-muted-foreground font-sans">Expires 12/2027</p></div>
-                      </div>
-                      <span className="text-xs font-bold text-primary">Update</span>
+                    <h5 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.08em] font-sans">API Usage This Month</h5>
+                    <div className="h-3 rounded-full bg-muted/60 overflow-hidden">
+                      <div className="h-full rounded-full bg-primary" style={{ width: "84.7%" }} />
                     </div>
+                    <p className="text-xs text-muted-foreground font-mono">847,000 / 1,000,000 calls (84.7%)</p>
                   </div>
                 </div>
               )}
@@ -1093,13 +1280,13 @@ function SettingsSection() {
 // ─── Main Dashboard ─────────────────────────────────────────────
 
 const sectionComponents: Record<SectionId, React.FC> = {
-  portfolio: PortfolioSection, performance: PerformanceSection, risk: RiskSection,
-  transactions: TransactionsSection, market: MarketSection, watchlist: WatchlistSection,
-  reports: ReportsSection, settings: SettingsSection,
+  overview: OverviewSection, cases: CasesSection, anomalies: AnomaliesSection,
+  entities: EntitiesSection, media: MediaSection, sources: SourcesSection,
+  model: ModelSection, settings: SettingsSection,
 }
 
 export default function FinancialAnalyticsDashboard() {
-  const [activeSection, setActiveSection] = useState<SectionId>("portfolio")
+  const [activeSection, setActiveSection] = useState<SectionId>("overview")
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const [notifItems, setNotifItems] = useState(notifications)
@@ -1132,12 +1319,12 @@ export default function FinancialAnalyticsDashboard() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2.5">
                 <div className="size-8 rounded-xl bg-primary/12 flex items-center justify-center glow-teal-sm">
-                  <BarChart3 className="size-4 text-primary" />
+                  <Scale className="size-4 text-primary" />
                 </div>
-                <span className="text-base font-extrabold tracking-tight text-foreground font-display">Meridian</span>
+                <span className="text-base font-extrabold tracking-tight text-foreground font-display">Limira</span>
               </div>
               <div className="hidden md:flex items-center gap-1 ml-3 text-xs text-muted-foreground font-sans">
-                <span>Analytics</span>
+                <span>Social Listening</span>
                 <ChevronRight className="size-3 text-muted-foreground/50" />
                 <span className="text-foreground font-semibold">{activeNav?.label}</span>
               </div>
@@ -1166,7 +1353,7 @@ export default function FinancialAnalyticsDashboard() {
                 <Settings className="size-4 text-muted-foreground" />
               </button>
               <div className="size-9 rounded-xl bg-primary/12 flex items-center justify-center ml-1.5 glow-teal-sm cursor-pointer hover:bg-primary/18 transition-colors">
-                <span className="text-xs font-bold text-primary font-display">JD</span>
+                <span className="text-xs font-bold text-primary font-display">T38</span>
               </div>
             </div>
           </div>
@@ -1219,9 +1406,9 @@ export default function FinancialAnalyticsDashboard() {
           <div className="flex items-center justify-between text-[11px] text-muted-foreground font-sans">
             <div className="flex items-center gap-2">
               <div className="size-2 rounded-full bg-fin-gain animate-pulse-soft" />
-              <span className="font-medium">All systems operational</span>
+              <span className="font-medium">All pipelines operational</span>
             </div>
-            <span className="font-mono text-muted-foreground/60">Last updated: Feb 20, 2026 — 14:32 UTC</span>
+            <span className="font-mono text-muted-foreground/60">Last sync: Feb 20, 2026 — 08:15 UTC</span>
           </div>
         </div>
       </footer>
