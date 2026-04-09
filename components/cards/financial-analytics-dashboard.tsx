@@ -355,12 +355,6 @@ function SeverityBadge({ severity }: { severity: "high" | "medium" | "low" }) {
     </span>
   )
 }
-  return (
-    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${styles[severity]}`}>
-      {severity}
-    </span>
-  )
-}
 
 // ─── Section: Overview ─────────────────────────────────────────
 
