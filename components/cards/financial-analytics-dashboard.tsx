@@ -81,9 +81,9 @@ const documentVolumeData = [
 ]
 
 const caseDistribution = [
-  { name: "Wage Theft", value: 22, color: C.teal },
-  { name: "Consumer Fraud", value: 18, color: C.azure },
-  { name: "Housing", value: 14, color: C.amber },
+  { name: "Wage Theft", value: 22, color: C.navy },
+  { name: "Consumer Fraud", value: 18, color: C.forest },
+  { name: "Housing", value: 14, color: C.gold },
   { name: "Employment", value: 28, color: C.coral },
   { name: "Civil Rights", value: 12, color: C.indigo },
   { name: "Other", value: 6, color: C.slate },
@@ -164,8 +164,9 @@ const verticalTabs = [
 // ─── Sub-Components ─────────────────────────────────────────────
 
 function GlowOrb({ className }: { className?: string }) {
+  // Subtle accent for preppy theme
   return (
-    <div className={`absolute rounded-full blur-3xl pointer-events-none ${className}`} />
+    <div className={`absolute rounded-full blur-3xl pointer-events-none opacity-30 ${className}`} />
   )
 }
 
@@ -299,7 +300,7 @@ function NotificationPanel({ isOpen, onClose, items, onMarkRead, onMarkAllRead }
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -12, scale: 0.95 }}
           transition={{ duration: 0.25, ease: EASE_OUT }}
-          className="absolute top-full right-0 mt-3 w-[420px] max-h-[30rem] rounded-2xl surface-elevated overflow-hidden z-50 glow-teal-sm"
+          className="absolute top-full right-0 mt-3 w-[420px] max-h-[30rem] rounded-2xl surface-elevated overflow-hidden z-50 shadow-preppy"
           style={{ boxShadow: CARD_SHADOW }}
         >
           <div className="flex items-center justify-between p-5 border-b border-border/50">
@@ -379,7 +380,7 @@ function OverviewSection() {
         <SectionPanel className="lg:col-span-2 relative overflow-hidden">
           <GlowOrb className="w-64 h-64 -top-32 -right-32 bg-primary/10" />
           <SectionHeader title="Document Ingestion Volume" subtitle="Monthly document processing">
-            <div className="flex items-center gap-1.5 rounded-xl bg-fin-gain/8 px-3 py-1.5 glow-teal-sm">
+            <div className="flex items-center gap-1.5 rounded-xl bg-fin-gain/8 px-3 py-1.5 shadow-preppy">
               <ArrowUpRight className="size-3.5 text-fin-gain" />
               <span className="text-xs font-bold text-fin-gain font-mono">+14.2%</span>
             </div>
@@ -389,16 +390,16 @@ function OverviewSection() {
               <AreaChart data={documentVolumeData} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
                 <defs>
                   <linearGradient id="volumeGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={C.teal} stopOpacity={0.25} />
-                    <stop offset="50%" stopColor={C.teal} stopOpacity={0.08} />
-                    <stop offset="100%" stopColor={C.teal} stopOpacity={0} />
+                    <stop offset="0%" stopColor={C.navy} stopOpacity={0.25} />
+                    <stop offset="50%" stopColor={C.navy} stopOpacity={0.08} />
+                    <stop offset="100%" stopColor={C.navy} stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={C.grid} vertical={false} />
                 <XAxis dataKey="month" tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Area type="monotone" dataKey="documents" stroke={C.teal} strokeWidth={2.5} fill="url(#volumeGrad)" name="documents" animationDuration={1400} animationEasing="ease-out" />
+                <Area type="monotone" dataKey="documents" stroke={C.navy} strokeWidth={2.5} fill="url(#volumeGrad)" name="documents" animationDuration={1400} animationEasing="ease-out" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -434,7 +435,7 @@ function OverviewSection() {
       {/* Recent Anomaly Alerts */}
       <SectionPanel>
         <SectionHeader title="Recent Anomaly Alerts" subtitle="Spikes and clusters requiring attention">
-          <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
+          <button className="flex items-center gap-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-all px-3.5 py-2 rounded-lg bg-primary shadow-preppy font-sans">
             View All <ChevronRight className="size-3.5" />
           </button>
         </SectionHeader>
@@ -445,11 +446,11 @@ function OverviewSection() {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.35, delay: 0.15 + i * 0.05 }}
-              className="flex items-center justify-between p-3.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all duration-200 group"
+              className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 border border-border/50 transition-all duration-200 group"
             >
               <div className="flex items-center gap-3.5">
-                <div className={`size-9 rounded-xl flex items-center justify-center ${
-                  alert.severity === "high" ? "bg-fin-loss/12 text-fin-loss" : alert.severity === "medium" ? "bg-chart-3/12 text-chart-3" : "bg-chart-2/12 text-chart-2"
+                <div className={`size-10 rounded-lg flex items-center justify-center border ${
+                  alert.severity === "high" ? "bg-fin-loss/10 text-fin-loss border-fin-loss/20" : alert.severity === "medium" ? "bg-gold/10 text-gold border-gold/20" : "bg-fin-gain/10 text-fin-gain border-fin-gain/20"
                 }`}>
                   {alert.type === "spike" ? <TrendingUp className="size-4" /> : alert.type === "cluster" ? <Layers className="size-4" /> : <Radio className="size-4" />}
                 </div>
@@ -494,10 +495,10 @@ function CasesSection() {
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">14 social justice categories from Legal-BERT classifier</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-xl surface-card hover:bg-accent/50 font-sans">
+            <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-all px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted border border-border font-sans">
               <Filter className="size-3.5" />Filter
             </button>
-            <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
+            <button className="flex items-center gap-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-all px-3.5 py-2 rounded-lg bg-primary shadow-preppy font-sans">
               <Download className="size-3.5" />Export
             </button>
           </div>
@@ -519,11 +520,11 @@ function CasesSection() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.35, delay: 0.15 + i * 0.03 }}
-                  className="border-b border-border/30 hover:bg-accent/20 transition-all duration-200"
+                  className="border-b border-border/50 hover:bg-muted/50 transition-all duration-200"
                 >
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+                      <div className="size-8 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
                         <span className="text-[10px] font-bold text-primary font-mono">{caseType.id}</span>
                       </div>
                       <span className="text-[13px] font-semibold text-foreground font-sans">{caseType.name}</span>
@@ -537,7 +538,7 @@ function CasesSection() {
                     </span>
                   </td>
                   <td className="p-4 hidden sm:table-cell">
-                    <div className="h-2 rounded-full bg-muted/60 overflow-hidden">
+                    <div className="h-2 rounded-full bg-muted overflow-hidden border border-border/50">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${(caseType.count / 6789) * 100}%` }}
@@ -572,9 +573,9 @@ function AnomaliesSection() {
         <GlowOrb className="w-48 h-48 -top-24 -left-24 bg-fin-loss/6" />
         <SectionHeader title="Time Series Anomaly Detection" subtitle="Housing Discrimination — ZIP 11237 (Bushwick)">
           <div className="flex items-center gap-5 text-[11px]">
-            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.teal }} /><span className="text-muted-foreground font-sans">Actual</span></div>
+            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.navy }} /><span className="text-muted-foreground font-sans">Actual</span></div>
             <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.slate }} /><span className="text-muted-foreground font-sans">Expected</span></div>
-            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.rose }} /><span className="text-muted-foreground font-sans">Threshold (μ+2σ)</span></div>
+            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.burgundy }} /><span className="text-muted-foreground font-sans">Threshold (μ+2σ)</span></div>
           </div>
         </SectionHeader>
         <div className="h-64">
@@ -585,12 +586,12 @@ function AnomaliesSection() {
               <YAxis tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} />
               <Tooltip content={<ChartTooltipContent />} />
               <Line type="monotone" dataKey="expected" name="expected" stroke={C.slate} strokeWidth={2} dot={false} strokeDasharray="6 3" animationDuration={1100} />
-              <Line type="monotone" dataKey="threshold" name="threshold" stroke={C.rose} strokeWidth={1.5} dot={false} strokeDasharray="4 4" animationDuration={1100} />
-              <Line type="monotone" dataKey="actual" name="actual" stroke={C.teal} strokeWidth={2.5} dot={{ fill: C.teal, r: 3 }} animationDuration={1100} />
+              <Line type="monotone" dataKey="threshold" name="threshold" stroke={C.burgundy} strokeWidth={1.5} dot={false} strokeDasharray="4 4" animationDuration={1100} />
+              <Line type="monotone" dataKey="actual" name="actual" stroke={C.navy} strokeWidth={2.5} dot={{ fill: C.navy, r: 3 }} animationDuration={1100} />
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <div className="mt-4 p-4 rounded-xl bg-fin-loss/5 border border-fin-loss/20">
+        <div className="mt-4 p-4 rounded-lg bg-fin-loss/5 border border-fin-loss/20 shadow-preppy">
           <div className="flex items-start gap-3">
             <AlertTriangle className="size-5 text-fin-loss shrink-0 mt-0.5" />
             <div>
@@ -627,7 +628,7 @@ function AnomaliesSection() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.35, delay: 0.15 + i * 0.04 }}
-                  className="border-b border-border/30 hover:bg-accent/20 transition-all duration-200"
+                  className="border-b border-border/50 hover:bg-muted/50 transition-all duration-200"
                 >
                   <td className="p-4">
                     <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg capitalize ${
@@ -671,10 +672,10 @@ function EntitiesSection() {
         <SectionHeader title="Entity Type Distribution" subtitle="Named entities extracted via SpaCy NER" />
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           {[
-            { type: "LOC", label: "Location", count: 8945, example: "Bushwick, 11237", color: C.teal },
-            { type: "ORG", label: "Organization", count: 3456, example: "Apex Property Mgmt", color: C.azure },
+            { type: "LOC", label: "Location", count: 8945, example: "Bushwick, 11237", color: C.navy },
+            { type: "ORG", label: "Organization", count: 3456, example: "Apex Property Mgmt", color: C.forest },
             { type: "DEM", label: "Demographic", count: 5621, example: "as a Black woman", color: C.coral },
-            { type: "MON", label: "Monetary", count: 4123, example: "$4,200 unpaid", color: C.amber },
+            { type: "MON", label: "Monetary", count: 4123, example: "$4,200 unpaid", color: C.gold },
             { type: "TIME", label: "Temporal", count: 2746, example: "since Jan 2025", color: C.indigo },
           ].map((entity, i) => (
             <motion.div
@@ -703,7 +704,7 @@ function EntitiesSection() {
             <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Entity Clusters (DBSCAN)</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">Organizations with 5+ related complaints — potential class action targets</p>
           </div>
-          <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
+          <button className="flex items-center gap-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-all px-3.5 py-2 rounded-lg bg-primary shadow-preppy font-sans">
             <Target className="size-3.5" />Generate Report
           </button>
         </div>
@@ -796,10 +797,10 @@ function MediaSection() {
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">AI-generated media buy suggestions based on detected patterns</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-xl surface-card hover:bg-accent/50 font-sans">
+            <button className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-all px-3 py-2 rounded-lg bg-muted/50 hover:bg-muted border border-border font-sans">
               <Filter className="size-3.5" />Filter
             </button>
-            <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
+            <button className="flex items-center gap-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-all px-3.5 py-2 rounded-lg bg-primary shadow-preppy font-sans">
               <Download className="size-3.5" />Export
             </button>
           </div>
@@ -823,11 +824,11 @@ function MediaSection() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.35, delay: 0.15 + i * 0.04 }}
-                  className="border-b border-border/30 hover:bg-accent/20 transition-all duration-200"
+                  className="border-b border-border/50 hover:bg-muted/50 transition-all duration-200"
                 >
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+                      <div className="size-8 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
                         <Megaphone className="size-4 text-primary" />
                       </div>
                       <span className="font-semibold text-foreground font-sans">{rec.channel}</span>
@@ -905,7 +906,7 @@ function SourcesSection() {
             <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Data Ingestion Pipeline</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">6 source categories with unified schema normalization</p>
           </div>
-          <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
+          <button className="flex items-center gap-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-all px-3.5 py-2 rounded-lg bg-primary shadow-preppy font-sans">
             <Plus className="size-3.5" />Add Source
           </button>
         </div>
@@ -1036,7 +1037,7 @@ function ModelSection() {
             <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Per-Category Performance</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">Target: F₁ ≥ 0.80 for deployment</p>
           </div>
-          <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
+          <button className="flex items-center gap-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90 transition-all px-3.5 py-2 rounded-lg bg-primary shadow-preppy font-sans">
             <Activity className="size-3.5" />Retrain Model
           </button>
         </div>
@@ -1061,7 +1062,7 @@ function ModelSection() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.35, delay: 0.15 + i * 0.04 }}
-                    className="border-b border-border/30 hover:bg-accent/20 transition-all duration-200"
+                    className="border-b border-border/50 hover:bg-muted/50 transition-all duration-200"
                   >
                     <td className="p-4"><span className="font-semibold text-foreground font-sans">{metric.category}</span></td>
                     <td className="p-4 text-right font-mono text-muted-foreground">{metric.precision.toFixed(2)}</td>
@@ -1133,42 +1134,41 @@ function SettingsSection() {
 
   return (
     <div className={`flex flex-col gap-5 ${SECTION_MIN_H}`}>
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="rounded-2xl surface-card p-5 lg:p-6 relative overflow-hidden" style={{ boxShadow: CARD_SHADOW }}>
-        <GlowOrb className="w-48 h-48 -top-24 -right-24 bg-primary/6" />
-        <h3 className="text-lg font-bold text-foreground font-display tracking-tight">Account Settings</h3>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="rounded-xl bg-card border border-border p-5 lg:p-6 relative overflow-hidden shadow-preppy">
+        <h3 className="text-lg font-semibold text-foreground font-display tracking-tight">Account Settings</h3>
         <p className="text-xs text-muted-foreground mt-1 font-sans">Manage your profile, alert preferences, and security</p>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="rounded-2xl surface-card p-3.5 lg:col-span-1" style={{ boxShadow: CARD_SHADOW }}>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="rounded-xl bg-card border border-border p-3.5 lg:col-span-1 shadow-preppy">
           <nav className="flex flex-col gap-1">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 w-full text-left font-sans ${
-                    activeTab === tab.id ? "text-foreground bg-primary/8" : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
+                  className={`relative flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium transition-all duration-200 w-full text-left font-sans ${
+                    activeTab === tab.id ? "text-primary-foreground bg-primary shadow-preppy" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                   }`}>
                   <Icon className="size-4" />{tab.label}
-                  {activeTab === tab.id && <ChevronRight className="size-3.5 ml-auto text-primary" />}
+                  {activeTab === tab.id && <ChevronRight className="size-3.5 ml-auto text-primary-foreground" />}
                 </button>
               )
             })}
             <div className="border-t border-border/50 my-2" />
-            <button className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold text-fin-loss/70 hover:text-fin-loss hover:bg-fin-loss/5 transition-all duration-200 w-full text-left font-sans">
+            <button className="flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium text-fin-loss/80 hover:text-fin-loss hover:bg-fin-loss/10 border border-transparent hover:border-fin-loss/20 transition-all duration-200 w-full text-left font-sans">
               <LogOut className="size-4" />Sign Out
             </button>
           </nav>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="rounded-2xl surface-card p-5 lg:p-7 lg:col-span-3" style={{ boxShadow: CARD_SHADOW }}>
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="rounded-xl bg-card border border-border p-5 lg:p-7 lg:col-span-3 shadow-preppy">
           <AnimatePresence mode="wait">
             <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
               {activeTab === "profile" && (
                 <div className="flex flex-col gap-6">
                   <div><h4 className="text-sm font-bold text-foreground font-display">Team Information</h4><p className="text-xs text-muted-foreground mt-0.5 font-sans">Manage your organization details</p></div>
                   <div className="flex items-center gap-4">
-                    <div className="size-16 rounded-2xl bg-primary/15 flex items-center justify-center glow-teal-sm"><span className="text-lg font-bold text-primary font-display">LM</span></div>
+                    <div className="size-16 rounded-lg bg-primary flex items-center justify-center shadow-preppy"><span className="text-lg font-bold text-primary-foreground font-display">LM</span></div>
                     <div><p className="text-sm font-bold text-foreground font-display">Limira Team 38</p><p className="text-xs text-muted-foreground font-sans">Cornell Tech — Enterprise Plan</p></div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1180,7 +1180,7 @@ function SettingsSection() {
                     ].map((field, i) => (
                       <div key={i} className="flex flex-col gap-2">
                         <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] font-sans">{field.label}</label>
-                        <div className="flex items-center gap-2.5 bg-muted/30 rounded-xl px-4 py-3 border border-border/30">
+                        <div className="flex items-center gap-2.5 bg-muted/30 rounded-lg px-4 py-3 border border-border">
                           <field.icon className="size-4 text-muted-foreground shrink-0" />
                           <span className="text-sm text-foreground font-sans">{field.value}</span>
                         </div>
@@ -1202,8 +1202,8 @@ function SettingsSection() {
                   ].map((item, i) => (
                     <div key={i} className="flex items-center justify-between py-1">
                       <div><p className="text-sm font-semibold text-foreground font-sans">{item.label}</p><p className="text-xs text-muted-foreground mt-0.5 font-sans">{item.desc}</p></div>
-                      <div className={`w-11 h-6 rounded-full relative cursor-pointer transition-colors duration-300 ${item.enabled ? "bg-primary" : "bg-muted"}`}>
-                        <div className={`absolute top-0.5 size-5 rounded-full bg-foreground transition-transform duration-300 ${item.enabled ? "translate-x-5.5" : "translate-x-0.5"}`} />
+                      <div className={`w-11 h-6 rounded-full relative cursor-pointer transition-all duration-300 border ${item.enabled ? "bg-primary border-primary" : "bg-muted border-border"}`}>
+                        <div className={`absolute top-0.5 size-5 rounded-full bg-card shadow-preppy transition-transform duration-300 ${item.enabled ? "translate-x-5.5" : "translate-x-0.5"}`} />
                       </div>
                     </div>
                   ))}
@@ -1218,9 +1218,9 @@ function SettingsSection() {
                     { label: "IP Allowlist", desc: "Restrict access to approved IPs", status: "Configure", statusColor: "text-primary" },
                     { label: "Audit Logs", desc: "Track all data access and exports", status: "View", statusColor: "text-primary" },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-border/30">
+                    <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
                       <div className="flex items-center gap-3.5">
-                        <div className="size-10 rounded-xl bg-accent/50 flex items-center justify-center"><Lock className="size-4 text-muted-foreground" /></div>
+                        <div className="size-10 rounded-lg bg-muted flex items-center justify-center border border-border"><Lock className="size-4 text-muted-foreground" /></div>
                         <div><p className="text-sm font-semibold text-foreground font-sans">{item.label}</p><p className="text-xs text-muted-foreground mt-0.5 font-sans">{item.desc}</p></div>
                       </div>
                       <span className={`text-xs font-bold ${item.statusColor}`}>{item.status}</span>
@@ -1239,7 +1239,7 @@ function SettingsSection() {
                   ].map((item, i) => {
                     const Icon = item.icon
                     return (
-                      <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-border/30">
+                      <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
                         <div className="flex items-center gap-3.5">
                           <Icon className="size-4 text-muted-foreground" />
                           <div><p className="text-sm font-semibold text-foreground font-sans">{item.label}</p><p className="text-xs text-muted-foreground font-sans">{item.desc}</p></div>
@@ -1253,7 +1253,7 @@ function SettingsSection() {
               {activeTab === "billing" && (
                 <div className="flex flex-col gap-6">
                   <div><h4 className="text-sm font-bold text-foreground font-display">Billing & Subscription</h4><p className="text-xs text-muted-foreground mt-0.5 font-sans">Manage your plan and API usage</p></div>
-                  <div className="rounded-xl bg-primary/6 border border-primary/15 p-5 flex items-center justify-between glow-teal-sm">
+                  <div className="rounded-lg bg-primary/5 border border-primary/15 p-5 flex items-center justify-between shadow-preppy">
                     <div className="flex items-center gap-4">
                       <div className="size-12 rounded-xl bg-primary/12 flex items-center justify-center"><Scale className="size-5 text-primary" /></div>
                       <div><p className="text-sm font-bold text-foreground font-display">Enterprise Plan</p><p className="text-xs text-muted-foreground font-sans">1M API calls/month — Renews Mar 1, 2026</p></div>
@@ -1308,8 +1308,8 @@ export default function FinancialAnalyticsDashboard() {
     <div className="w-full min-h-screen bg-background text-foreground flex flex-col relative" style={{ boxShadow: CARD_SHADOW }}>
       {/* Atmospheric mesh gradient background */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full opacity-[0.03] blur-[120px] animate-float" style={{ background: C.teal }} />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full opacity-[0.02] blur-[100px] animate-float" style={{ background: C.azure, animationDelay: "3s" }} />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full opacity-[0.03] blur-[120px] animate-float" style={{ background: C.navy }} />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full opacity-[0.02] blur-[100px] animate-float" style={{ background: C.forest, animationDelay: "3s" }} />
       </div>
 
       {/* Header */}
@@ -1318,7 +1318,7 @@ export default function FinancialAnalyticsDashboard() {
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2.5">
-                <div className="size-8 rounded-xl bg-primary/12 flex items-center justify-center glow-teal-sm">
+                <div className="size-8 rounded-xl bg-primary/12 flex items-center justify-center shadow-preppy">
                   <Scale className="size-4 text-primary" />
                 </div>
                 <span className="text-base font-extrabold tracking-tight text-foreground font-display">Limira</span>
@@ -1352,7 +1352,7 @@ export default function FinancialAnalyticsDashboard() {
               <button className="p-2.5 rounded-xl hover:bg-accent/50 transition-all duration-200" aria-label="Settings" onClick={() => handleNavigation("settings")}>
                 <Settings className="size-4 text-muted-foreground" />
               </button>
-              <div className="size-9 rounded-xl bg-primary/12 flex items-center justify-center ml-1.5 glow-teal-sm cursor-pointer hover:bg-primary/18 transition-colors">
+              <div className="size-9 rounded-xl bg-primary/12 flex items-center justify-center ml-1.5 shadow-preppy cursor-pointer hover:bg-primary/18 transition-colors">
                 <span className="text-xs font-bold text-primary font-display">T38</span>
               </div>
             </div>
@@ -1401,14 +1401,17 @@ export default function FinancialAnalyticsDashboard() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/40 mt-auto relative z-10">
+      <footer className="border-t border-border bg-card/50 mt-auto relative z-10">
         <div className="w-full px-5 lg:px-10 xl:px-14 py-4">
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground font-sans">
-            <div className="flex items-center gap-2">
-              <div className="size-2 rounded-full bg-fin-gain animate-pulse-soft" />
-              <span className="font-medium">All pipelines operational</span>
+          <div className="flex items-center justify-between text-xs text-muted-foreground font-sans">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-fin-gain/10 border border-fin-gain/20">
+                <div className="size-1.5 rounded-full bg-fin-gain animate-pulse-soft" />
+                <span className="font-medium text-fin-gain text-[11px]">All Systems Operational</span>
+              </div>
+              <span className="text-muted-foreground/60 hidden sm:inline">6 data sources connected</span>
             </div>
-            <span className="font-mono text-muted-foreground/60">Last sync: Feb 20, 2026 — 08:15 UTC</span>
+            <span className="font-mono text-muted-foreground/60 text-[11px]">Last sync: Feb 20, 2026 — 08:15 UTC</span>
           </div>
         </div>
       </footer>
