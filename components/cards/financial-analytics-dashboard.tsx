@@ -22,19 +22,21 @@ const CARD_SHADOW =
 
 const SECTION_MIN_H = "min-h-[calc(100vh-10.5rem)]"
 
-// Colors for recharts - Charcoal on white cards, linen background
+// Colors as constants for recharts
 const C = {
-  charcoal: "oklch(0.25 0.02 70)",
-  charcoalLight: "oklch(0.40 0.025 70)",
-  taupe: "oklch(0.55 0.04 70)",
-  taupeLight: "oklch(0.68 0.035 70)",
-  cream: "oklch(0.92 0.015 70)",
-  muted: "oklch(0.75 0.025 70)",
-  gain: "oklch(0.45 0.14 155)",
-  loss: "oklch(0.50 0.14 25)",
-  grid: "oklch(0.90 0.01 70)",
-  tick: "oklch(0.55 0.025 70)",
-  gold: "oklch(0.60 0.14 75)",
+  teal: "oklch(0.78 0.16 182)",
+  tealMuted: "oklch(0.78 0.16 182 / 0.3)",
+  azure: "oklch(0.68 0.14 245)",
+  amber: "oklch(0.76 0.14 75)",
+  rose: "oklch(0.62 0.22 18)",
+  slate: "oklch(0.50 0.02 260)",
+  gain: "oklch(0.76 0.16 162)",
+  loss: "oklch(0.62 0.22 18)",
+  grid: "oklch(0.24 0.01 260)",
+  tick: "oklch(0.50 0.015 260)",
+  surface: "oklch(0.175 0.01 260)",
+  indigo: "oklch(0.65 0.18 270)",
+  coral: "oklch(0.70 0.18 30)",
 }
 
 const SPRING = { type: "spring" as const, stiffness: 400, damping: 32 }
@@ -79,12 +81,12 @@ const documentVolumeData = [
 ]
 
 const caseDistribution = [
-  { name: "Wage Theft", value: 22, color: C.charcoal },
-  { name: "Consumer Fraud", value: 18, color: C.charcoalLight },
-  { name: "Housing", value: 14, color: C.taupe },
-  { name: "Employment", value: 28, color: C.taupeLight },
-  { name: "Civil Rights", value: 12, color: C.muted },
-  { name: "Other", value: 6, color: C.cream },
+  { name: "Wage Theft", value: 22, color: C.teal },
+  { name: "Consumer Fraud", value: 18, color: C.azure },
+  { name: "Housing", value: 14, color: C.amber },
+  { name: "Employment", value: 28, color: C.coral },
+  { name: "Civil Rights", value: 12, color: C.indigo },
+  { name: "Other", value: 6, color: C.slate },
 ]
 
 const anomalyAlerts = [
@@ -162,9 +164,8 @@ const verticalTabs = [
 // ─── Sub-Components ─────────────────────────────────────────────
 
 function GlowOrb({ className }: { className?: string }) {
-  // Minimal accent - almost invisible for editorial look
   return (
-    <div className={`absolute rounded-full blur-3xl pointer-events-none opacity-10 ${className}`} />
+    <div className={`absolute rounded-full blur-3xl pointer-events-none ${className}`} />
   )
 }
 
@@ -176,26 +177,30 @@ function KpiCard({
   const isPositive = (change ?? 0) >= 0
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay, ease: EASE_OUT }}
-      className="relative overflow-hidden bg-card rounded p-5 lg:p-6 shadow-linen"
+      initial={{ opacity: 0, y: 16, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.5, delay, ease: EASE_OUT }}
+      className="relative overflow-hidden rounded-2xl surface-card p-4 lg:p-5 group hover:scale-[1.01] transition-transform duration-300"
+      style={{ boxShadow: CARD_SHADOW }}
     >
-      <p className="text-[10px] font-medium tracking-[0.15em] uppercase text-muted-foreground mb-3 font-sans">
+      <div className="absolute top-0 right-0 w-24 h-24 opacity-[0.03] pointer-events-none">
+        {Icon && <Icon className="size-24 -translate-y-4 translate-x-4" />}
+      </div>
+      <p className="text-[11px] font-semibold tracking-[0.08em] uppercase text-muted-foreground mb-2.5 font-sans">
         {label}
       </p>
-      <p className="text-2xl lg:text-3xl font-normal text-foreground font-display tracking-tight leading-none">
+      <p className="text-2xl lg:text-3xl font-bold text-foreground font-mono tracking-tighter leading-none">
         {prefix}{value}{suffix}
       </p>
       {change !== undefined && (
-        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-border">
-          <div className={`flex items-center gap-1 text-xs font-medium font-mono ${
-            isPositive ? "text-fin-gain" : "text-fin-loss"
+        <div className="flex items-center gap-1.5 mt-3">
+          <div className={`flex items-center gap-0.5 text-xs font-semibold font-mono px-1.5 py-0.5 rounded-md ${
+            isPositive ? "bg-fin-gain/10 text-fin-gain" : "bg-fin-loss/10 text-fin-loss"
           }`}>
             {isPositive ? <ArrowUpRight className="size-3" /> : <ArrowDownRight className="size-3" />}
             {isPositive ? "+" : ""}{change}%
           </div>
-          <span className="text-[10px] text-muted-foreground font-sans">vs last month</span>
+          <span className="text-[10px] text-muted-foreground/70 font-sans">vs last month</span>
         </div>
       )}
     </motion.div>
@@ -225,13 +230,13 @@ function MiniSparkline({ data, color, height = 32 }: { data: number[]; color: st
 function ChartTooltipContent({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; name: string; color: string }>; label?: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-card rounded p-3 text-xs shadow-linen-lg border border-border">
-      <p className="text-muted-foreground mb-2 font-medium text-[9px] uppercase tracking-[0.15em] font-sans">{label}</p>
+    <div className="rounded-xl surface-elevated p-3 text-xs backdrop-blur-md" style={{ boxShadow: CARD_SHADOW }}>
+      <p className="text-muted-foreground mb-2 font-semibold text-[11px] uppercase tracking-wider font-sans">{label}</p>
       {payload.map((entry, i) => (
         <div key={i} className="flex items-center gap-2 py-0.5">
-          <div className="size-2 rounded-sm" style={{ backgroundColor: entry.color }} />
-          <span className="text-muted-foreground capitalize font-sans text-[11px]">{entry.name}</span>
-          <span className="font-mono font-medium text-foreground ml-auto">{typeof entry.value === "number" ? entry.value.toLocaleString() : entry.value}</span>
+          <div className="size-2 rounded-full" style={{ backgroundColor: entry.color }} />
+          <span className="text-muted-foreground capitalize font-sans">{entry.name}:</span>
+          <span className="font-mono font-bold text-foreground">{typeof entry.value === "number" ? entry.value.toLocaleString() : entry.value}</span>
         </div>
       ))}
     </div>
@@ -241,10 +246,11 @@ function ChartTooltipContent({ active, payload, label }: { active?: boolean; pay
 function SectionPanel({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: 0.1, ease: EASE_OUT }}
-      className={`bg-card rounded p-5 lg:p-6 shadow-linen ${className}`}
+      transition={{ duration: 0.6, delay: 0.15, ease: EASE_OUT }}
+      className={`rounded-2xl surface-card p-5 lg:p-6 ${className}`}
+      style={{ boxShadow: CARD_SHADOW }}
     >
       {children}
     </motion.div>
@@ -253,10 +259,10 @@ function SectionPanel({ children, className = "" }: { children: React.ReactNode;
 
 function SectionHeader({ title, subtitle, children }: { title: string; subtitle: string; children?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between mb-5 pb-4 border-b border-border">
+    <div className="flex items-center justify-between mb-5">
       <div>
-        <h3 className="text-xs font-medium text-foreground tracking-[0.12em] uppercase font-sans">{title}</h3>
-        <p className="text-[13px] text-muted-foreground mt-1.5 font-sans">{subtitle}</p>
+        <h3 className="text-sm font-bold text-foreground tracking-tight font-display">{title}</h3>
+        <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">{subtitle}</p>
       </div>
       {children}
     </div>
@@ -292,45 +298,46 @@ function NotificationPanel({ isOpen, onClose, items, onMarkRead, onMarkAllRead }
           initial={{ opacity: 0, y: -12, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -12, scale: 0.95 }}
-          transition={{ duration: 0.2, ease: EASE_OUT }}
-          className="absolute top-full right-0 mt-2 w-[380px] max-h-[28rem] rounded bg-card border border-border overflow-hidden z-50 shadow-linen"
+          transition={{ duration: 0.25, ease: EASE_OUT }}
+          className="absolute top-full right-0 mt-3 w-[420px] max-h-[30rem] rounded-2xl surface-elevated overflow-hidden z-50 glow-teal-sm"
+          style={{ boxShadow: CARD_SHADOW }}
         >
-          <div className="flex items-center justify-between p-4 border-b border-border">
-            <div className="flex items-center gap-2">
-              <h3 className="text-xs font-semibold text-foreground font-sans tracking-wide uppercase">Alerts</h3>
+          <div className="flex items-center justify-between p-5 border-b border-border/50">
+            <div className="flex items-center gap-2.5">
+              <h3 className="text-sm font-bold text-foreground font-display tracking-tight">Alerts</h3>
               {unreadCount > 0 && (
-                <span className="text-[9px] font-medium bg-foreground text-background px-1.5 py-0.5 rounded">{unreadCount}</span>
+                <span className="text-[10px] font-bold bg-primary text-primary-foreground px-2 py-0.5 rounded-full">{unreadCount}</span>
               )}
             </div>
             <div className="flex items-center gap-1">
               {unreadCount > 0 && (
-                <button onClick={onMarkAllRead} className="text-[10px] font-medium text-muted-foreground hover:text-foreground px-2 py-1 transition-colors tracking-wide">Mark all read</button>
+                <button onClick={onMarkAllRead} className="text-[11px] font-semibold text-primary hover:text-primary/80 px-2 py-1 transition-colors">Mark all read</button>
               )}
-              <button onClick={onClose} className="p-1.5 rounded hover:bg-accent transition-colors" aria-label="Close notifications"><X className="size-3.5 text-muted-foreground" /></button>
+              <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-accent transition-colors" aria-label="Close notifications"><X className="size-4 text-muted-foreground" /></button>
             </div>
           </div>
-          <div className="overflow-y-auto max-h-[22rem]">
+          <div className="overflow-y-auto max-h-[23rem]">
             {items.map((notif, i) => (
               <motion.button
                 key={notif.id}
-                initial={{ opacity: 0, x: -8 }}
+                initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2, delay: i * 0.02 }}
+                transition={{ duration: 0.25, delay: i * 0.03 }}
                 onClick={() => onMarkRead(notif.id)}
-                className={`w-full flex items-start gap-3 p-4 text-left border-b border-border hover:bg-accent/50 transition-colors ${!notif.read ? "bg-muted/30" : ""}`}
+                className={`w-full flex items-start gap-3.5 p-4 text-left border-b border-border/30 hover:bg-accent/30 transition-all duration-200 ${!notif.read ? "bg-primary/[0.04]" : ""}`}
               >
-                <div className={`size-7 rounded flex items-center justify-center shrink-0 mt-0.5 ${
-                  notif.type === "success" ? "bg-fin-gain/10 text-fin-gain" : notif.type === "warning" ? "bg-gold/10 text-gold" : "bg-muted text-muted-foreground"
+                <div className={`size-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                  notif.type === "success" ? "bg-fin-gain/12 text-fin-gain" : notif.type === "warning" ? "bg-chart-3/12 text-chart-3" : "bg-chart-2/12 text-chart-2"
                 }`}>
                   <NotificationIcon type={notif.type} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-xs font-medium text-foreground truncate font-sans">{notif.title}</p>
-                    {!notif.read && <div className="size-1.5 rounded-full bg-foreground shrink-0" />}
+                    <p className="text-[13px] font-semibold text-foreground truncate font-sans">{notif.title}</p>
+                    {!notif.read && <div className="size-1.5 rounded-full bg-primary shrink-0 animate-pulse-soft" />}
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2 leading-relaxed font-sans">{notif.message}</p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-1.5 flex items-center gap-1 font-mono"><Clock className="size-2.5" />{notif.time}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2 leading-relaxed font-sans">{notif.message}</p>
+                  <p className="text-[10px] text-muted-foreground/50 mt-1.5 flex items-center gap-1 font-mono"><Clock className="size-2.5" />{notif.time}</p>
                 </div>
               </motion.button>
             ))}
@@ -343,12 +350,12 @@ function NotificationPanel({ isOpen, onClose, items, onMarkRead, onMarkAllRead }
 
 function SeverityBadge({ severity }: { severity: "high" | "medium" | "low" }) {
   const styles = {
-    high: "bg-fin-loss/12 text-fin-loss border border-fin-loss/15",
-    medium: "bg-gold/12 text-gold border border-gold/15",
-    low: "bg-fin-gain/12 text-fin-gain border border-fin-gain/15",
+    high: "bg-fin-loss/10 text-fin-loss",
+    medium: "bg-chart-3/10 text-chart-3",
+    low: "bg-chart-2/10 text-chart-2",
   }
   return (
-    <span className={`text-[10px] font-medium uppercase tracking-wider px-2.5 py-1 rounded ${styles[severity]}`}>
+    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${styles[severity]}`}>
       {severity}
     </span>
   )
@@ -372,7 +379,7 @@ function OverviewSection() {
         <SectionPanel className="lg:col-span-2 relative overflow-hidden">
           <GlowOrb className="w-64 h-64 -top-32 -right-32 bg-primary/10" />
           <SectionHeader title="Document Ingestion Volume" subtitle="Monthly document processing">
-            <div className="flex items-center gap-1.5 rounded bg-fin-gain/8 px-3 py-1.5 shadow-linen">
+            <div className="flex items-center gap-1.5 rounded-xl bg-fin-gain/8 px-3 py-1.5 glow-teal-sm">
               <ArrowUpRight className="size-3.5 text-fin-gain" />
               <span className="text-xs font-bold text-fin-gain font-mono">+14.2%</span>
             </div>
@@ -382,16 +389,16 @@ function OverviewSection() {
               <AreaChart data={documentVolumeData} margin={{ top: 5, right: 5, bottom: 0, left: 0 }}>
                 <defs>
                   <linearGradient id="volumeGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor={C.charcoal} stopOpacity={0.4} />
-                    <stop offset="50%" stopColor={C.charcoal} stopOpacity={0.15} />
-                    <stop offset="100%" stopColor={C.charcoal} stopOpacity={0} />
+                    <stop offset="0%" stopColor={C.teal} stopOpacity={0.25} />
+                    <stop offset="50%" stopColor={C.teal} stopOpacity={0.08} />
+                    <stop offset="100%" stopColor={C.teal} stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={C.grid} vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 10, fill: C.tick }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: C.tick }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
                 <Tooltip content={<ChartTooltipContent />} />
-                <Area type="monotone" dataKey="documents" stroke={C.charcoal} strokeWidth={2} fill="url(#volumeGrad)" name="documents" animationDuration={1400} animationEasing="ease-out" />
+                <Area type="monotone" dataKey="documents" stroke={C.teal} strokeWidth={2.5} fill="url(#volumeGrad)" name="documents" animationDuration={1400} animationEasing="ease-out" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -427,7 +434,7 @@ function OverviewSection() {
       {/* Recent Anomaly Alerts */}
       <SectionPanel>
         <SectionHeader title="Recent Anomaly Alerts" subtitle="Spikes and clusters requiring attention">
-          <button className="flex items-center gap-1.5 text-[11px] font-medium text-primary-foreground hover:opacity-90 transition-all px-4 py-2 rounded bg-primary font-sans tracking-[0.08em] uppercase">
+          <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
             View All <ChevronRight className="size-3.5" />
           </button>
         </SectionHeader>
@@ -438,11 +445,11 @@ function OverviewSection() {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.35, delay: 0.15 + i * 0.05 }}
-              className="flex items-center justify-between p-4 rounded-lg bg-muted/30 hover:bg-muted/50 border border-border/50 transition-all duration-200 group"
+              className="flex items-center justify-between p-3.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-all duration-200 group"
             >
               <div className="flex items-center gap-3.5">
-                <div className={`size-10 rounded-lg flex items-center justify-center border ${
-                  alert.severity === "high" ? "bg-fin-loss/10 text-fin-loss border-fin-loss/20" : alert.severity === "medium" ? "bg-gold/10 text-gold border-gold/20" : "bg-fin-gain/10 text-fin-gain border-fin-gain/20"
+                <div className={`size-9 rounded-xl flex items-center justify-center ${
+                  alert.severity === "high" ? "bg-fin-loss/12 text-fin-loss" : alert.severity === "medium" ? "bg-chart-3/12 text-chart-3" : "bg-chart-2/12 text-chart-2"
                 }`}>
                   {alert.type === "spike" ? <TrendingUp className="size-4" /> : alert.type === "cluster" ? <Layers className="size-4" /> : <Radio className="size-4" />}
                 </div>
@@ -487,10 +494,10 @@ function CasesSection() {
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">14 social justice categories from Legal-BERT classifier</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-all px-4 py-2 rounded border border-border hover:border-muted-foreground font-sans tracking-[0.08em] uppercase">
+            <button className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-xl surface-card hover:bg-accent/50 font-sans">
               <Filter className="size-3.5" />Filter
             </button>
-            <button className="flex items-center gap-1.5 text-[11px] font-medium text-primary-foreground hover:opacity-90 transition-all px-4 py-2 rounded bg-primary font-sans tracking-[0.08em] uppercase">
+            <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
               <Download className="size-3.5" />Export
             </button>
           </div>
@@ -512,11 +519,11 @@ function CasesSection() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.35, delay: 0.15 + i * 0.03 }}
-                  className="border-b border-border/50 hover:bg-muted/50 transition-all duration-200"
+                  className="border-b border-border/30 hover:bg-accent/20 transition-all duration-200"
                 >
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                      <div className="size-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
                         <span className="text-[10px] font-bold text-primary font-mono">{caseType.id}</span>
                       </div>
                       <span className="text-[13px] font-semibold text-foreground font-sans">{caseType.name}</span>
@@ -530,7 +537,7 @@ function CasesSection() {
                     </span>
                   </td>
                   <td className="p-4 hidden sm:table-cell">
-                    <div className="h-2 rounded-full bg-muted overflow-hidden border border-border/50">
+                    <div className="h-2 rounded-full bg-muted/60 overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${(caseType.count / 6789) * 100}%` }}
@@ -564,10 +571,10 @@ function AnomaliesSection() {
       <SectionPanel className="relative overflow-hidden">
         <GlowOrb className="w-48 h-48 -top-24 -left-24 bg-fin-loss/6" />
         <SectionHeader title="Time Series Anomaly Detection" subtitle="Housing Discrimination — ZIP 11237 (Bushwick)">
-          <div className="flex items-center gap-5 text-[10px] tracking-wide">
-            <div className="flex items-center gap-2"><div className="size-2 rounded-full" style={{ background: C.charcoal }} /><span className="text-foreground/60 font-sans uppercase">Actual</span></div>
-            <div className="flex items-center gap-2"><div className="size-2 rounded-full" style={{ background: C.taupe }} /><span className="text-foreground/60 font-sans uppercase">Expected</span></div>
-            <div className="flex items-center gap-2"><div className="size-2 rounded-full" style={{ background: C.taupe }} /><span className="text-foreground/60 font-sans uppercase">Threshold</span></div>
+          <div className="flex items-center gap-5 text-[11px]">
+            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.teal }} /><span className="text-muted-foreground font-sans">Actual</span></div>
+            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.slate }} /><span className="text-muted-foreground font-sans">Expected</span></div>
+            <div className="flex items-center gap-2"><div className="size-2.5 rounded-full" style={{ background: C.rose }} /><span className="text-muted-foreground font-sans">Threshold (μ+2σ)</span></div>
           </div>
         </SectionHeader>
         <div className="h-64">
@@ -577,13 +584,13 @@ function AnomaliesSection() {
               <XAxis dataKey="week" tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: C.tick }} axisLine={false} tickLine={false} />
               <Tooltip content={<ChartTooltipContent />} />
-              <Line type="monotone" dataKey="expected" name="expected" stroke={C.taupe} strokeWidth={2} dot={false} strokeDasharray="6 3" animationDuration={1100} />
-              <Line type="monotone" dataKey="threshold" name="threshold" stroke={C.taupe} strokeWidth={1.5} dot={false} strokeDasharray="4 4" animationDuration={1100} />
-              <Line type="monotone" dataKey="actual" name="actual" stroke={C.charcoal} strokeWidth={2.5} dot={{ fill: C.charcoal, r: 3 }} animationDuration={1100} />
+              <Line type="monotone" dataKey="expected" name="expected" stroke={C.slate} strokeWidth={2} dot={false} strokeDasharray="6 3" animationDuration={1100} />
+              <Line type="monotone" dataKey="threshold" name="threshold" stroke={C.rose} strokeWidth={1.5} dot={false} strokeDasharray="4 4" animationDuration={1100} />
+              <Line type="monotone" dataKey="actual" name="actual" stroke={C.teal} strokeWidth={2.5} dot={{ fill: C.teal, r: 3 }} animationDuration={1100} />
             </LineChart>
           </ResponsiveContainer>
         </div>
-        <div className="mt-4 p-4 rounded-lg bg-fin-loss/5 border border-fin-loss/20 shadow-linen">
+        <div className="mt-4 p-4 rounded-xl bg-fin-loss/5 border border-fin-loss/20">
           <div className="flex items-start gap-3">
             <AlertTriangle className="size-5 text-fin-loss shrink-0 mt-0.5" />
             <div>
@@ -620,7 +627,7 @@ function AnomaliesSection() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.35, delay: 0.15 + i * 0.04 }}
-                  className="border-b border-border/50 hover:bg-muted/50 transition-all duration-200"
+                  className="border-b border-border/30 hover:bg-accent/20 transition-all duration-200"
                 >
                   <td className="p-4">
                     <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1 rounded-lg capitalize ${
@@ -664,10 +671,10 @@ function EntitiesSection() {
         <SectionHeader title="Entity Type Distribution" subtitle="Named entities extracted via SpaCy NER" />
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           {[
-            { type: "LOC", label: "Location", count: 8945, example: "Bushwick, 11237", color: C.charcoal },
-            { type: "ORG", label: "Organization", count: 3456, example: "Apex Property Mgmt", color: C.taupe },
+            { type: "LOC", label: "Location", count: 8945, example: "Bushwick, 11237", color: C.teal },
+            { type: "ORG", label: "Organization", count: 3456, example: "Apex Property Mgmt", color: C.azure },
             { type: "DEM", label: "Demographic", count: 5621, example: "as a Black woman", color: C.coral },
-            { type: "MON", label: "Monetary", count: 4123, example: "$4,200 unpaid", color: C.gold },
+            { type: "MON", label: "Monetary", count: 4123, example: "$4,200 unpaid", color: C.amber },
             { type: "TIME", label: "Temporal", count: 2746, example: "since Jan 2025", color: C.indigo },
           ].map((entity, i) => (
             <motion.div
@@ -675,7 +682,7 @@ function EntitiesSection() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: i * 0.06 }}
-              className="p-4 rounded bg-muted/30 hover:bg-muted/50 transition-colors"
+              className="p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
             >
               <div className="flex items-center gap-2 mb-2">
                 <div className="size-6 rounded-lg flex items-center justify-center" style={{ background: `${entity.color}20` }}>
@@ -696,7 +703,7 @@ function EntitiesSection() {
             <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Entity Clusters (DBSCAN)</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">Organizations with 5+ related complaints — potential class action targets</p>
           </div>
-          <button className="flex items-center gap-1.5 text-[11px] font-medium text-primary-foreground hover:opacity-90 transition-all px-4 py-2 rounded bg-primary font-sans tracking-[0.08em] uppercase">
+          <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
             <Target className="size-3.5" />Generate Report
           </button>
         </div>
@@ -712,7 +719,7 @@ function EntitiesSection() {
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2.5 mb-2">
-                    <div className="size-9 rounded bg-primary/10 flex items-center justify-center">
+                    <div className="size-9 rounded-xl bg-primary/10 flex items-center justify-center">
                       <Building2 className="size-4 text-primary" />
                     </div>
                     <div>
@@ -769,7 +776,7 @@ function MediaSection() {
             return (
               <button
                 key={tab.id}
-                className={`flex items-center gap-2.5 px-4 py-3 rounded text-sm font-semibold transition-all duration-200 font-sans ${
+                className={`flex items-center gap-2.5 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 font-sans ${
                   tab.active ? "bg-primary/10 text-primary border border-primary/20" : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
                 }`}
               >
@@ -789,10 +796,10 @@ function MediaSection() {
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">AI-generated media buy suggestions based on detected patterns</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-all px-4 py-2 rounded border border-border hover:border-muted-foreground font-sans tracking-[0.08em] uppercase">
+            <button className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-xl surface-card hover:bg-accent/50 font-sans">
               <Filter className="size-3.5" />Filter
             </button>
-            <button className="flex items-center gap-1.5 text-[11px] font-medium text-primary-foreground hover:opacity-90 transition-all px-4 py-2 rounded bg-primary font-sans tracking-[0.08em] uppercase">
+            <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
               <Download className="size-3.5" />Export
             </button>
           </div>
@@ -816,11 +823,11 @@ function MediaSection() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.35, delay: 0.15 + i * 0.04 }}
-                  className="border-b border-border/50 hover:bg-muted/50 transition-all duration-200"
+                  className="border-b border-border/30 hover:bg-accent/20 transition-all duration-200"
                 >
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className="size-8 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+                      <div className="size-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
                         <Megaphone className="size-4 text-primary" />
                       </div>
                       <span className="font-semibold text-foreground font-sans">{rec.channel}</span>
@@ -850,7 +857,7 @@ function MediaSection() {
       <SectionPanel>
         <SectionHeader title="Campaign Messaging Guidelines" subtitle="Compliant messaging for &quot;Know Your Rights&quot; campaigns" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="p-4 rounded bg-fin-gain/5 border border-fin-gain/20">
+          <div className="p-4 rounded-xl bg-fin-gain/5 border border-fin-gain/20">
             <div className="flex items-center gap-2 mb-2">
               <Check className="size-4 text-fin-gain" />
               <span className="text-sm font-bold text-foreground font-sans">Do</span>
@@ -862,7 +869,7 @@ function MediaSection() {
               <li>Target geographic areas, not individuals</li>
             </ul>
           </div>
-          <div className="p-4 rounded bg-fin-loss/5 border border-fin-loss/20">
+          <div className="p-4 rounded-xl bg-fin-loss/5 border border-fin-loss/20">
             <div className="flex items-center gap-2 mb-2">
               <X className="size-4 text-fin-loss" />
               <span className="text-sm font-bold text-foreground font-sans">{"Don't"}</span>
@@ -898,7 +905,7 @@ function SourcesSection() {
             <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Data Ingestion Pipeline</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">6 source categories with unified schema normalization</p>
           </div>
-          <button className="flex items-center gap-1.5 text-[11px] font-medium text-primary-foreground hover:opacity-90 transition-all px-4 py-2 rounded bg-primary font-sans tracking-[0.08em] uppercase">
+          <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
             <Plus className="size-3.5" />Add Source
           </button>
         </div>
@@ -913,7 +920,7 @@ function SourcesSection() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className={`size-10 rounded flex items-center justify-center ${
+                  <div className={`size-10 rounded-xl flex items-center justify-center ${
                     source.status === "active" ? "bg-fin-gain/10" : "bg-chart-3/10"
                   }`}>
                     <Database className={`size-5 ${source.status === "active" ? "text-fin-gain" : "text-chart-3"}`} />
@@ -1009,13 +1016,13 @@ function ModelSection() {
             { label: "Attention Heads", value: "12" },
             { label: "Parameters", value: "110M" },
           ].map((spec, i) => (
-            <div key={i} className="p-4 rounded bg-muted/30">
+            <div key={i} className="p-4 rounded-xl bg-muted/30">
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.06em] font-sans">{spec.label}</p>
               <p className="text-xl font-bold font-mono text-foreground mt-1">{spec.value}</p>
             </div>
           ))}
         </div>
-        <div className="mt-5 p-4 rounded bg-muted/20 border border-border/30">
+        <div className="mt-5 p-4 rounded-xl bg-muted/20 border border-border/30">
           <p className="text-xs text-muted-foreground font-sans leading-relaxed">
             <span className="font-semibold text-foreground">Training Configuration:</span> NVIDIA A100 (80GB HBM2e) via Google Colab Pro+. 
             AdamW optimizer (β₁=0.9, β₂=0.999), learning rate 2×10⁻⁵ with linear warmup, mixed precision (FP16), batch size 64, 8 epochs.
@@ -1029,7 +1036,7 @@ function ModelSection() {
             <h3 className="text-sm font-bold text-foreground tracking-tight font-display">Per-Category Performance</h3>
             <p className="text-[11px] text-muted-foreground mt-0.5 font-sans">Target: F₁ ≥ 0.80 for deployment</p>
           </div>
-          <button className="flex items-center gap-1.5 text-[11px] font-medium text-primary-foreground hover:opacity-90 transition-all px-4 py-2 rounded bg-primary font-sans tracking-[0.08em] uppercase">
+          <button className="flex items-center gap-1.5 text-xs font-bold text-primary hover:text-primary/80 transition-colors px-3.5 py-2 rounded-xl bg-primary/8 hover:bg-primary/12 font-sans">
             <Activity className="size-3.5" />Retrain Model
           </button>
         </div>
@@ -1054,7 +1061,7 @@ function ModelSection() {
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.35, delay: 0.15 + i * 0.04 }}
-                    className="border-b border-border/50 hover:bg-muted/50 transition-all duration-200"
+                    className="border-b border-border/30 hover:bg-accent/20 transition-all duration-200"
                   >
                     <td className="p-4"><span className="font-semibold text-foreground font-sans">{metric.category}</span></td>
                     <td className="p-4 text-right font-mono text-muted-foreground">{metric.precision.toFixed(2)}</td>
@@ -1093,7 +1100,7 @@ function ModelSection() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="p-4 rounded bg-muted/30 border border-border/30"
+              className="p-4 rounded-xl bg-muted/30 border border-border/30"
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded font-mono">{tier.tier}</span>
@@ -1126,41 +1133,42 @@ function SettingsSection() {
 
   return (
     <div className={`flex flex-col gap-5 ${SECTION_MIN_H}`}>
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="rounded bg-card border border-border p-5 lg:p-6 relative overflow-hidden shadow-linen">
-        <h3 className="text-lg font-semibold text-foreground font-display tracking-tight">Account Settings</h3>
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="rounded-2xl surface-card p-5 lg:p-6 relative overflow-hidden" style={{ boxShadow: CARD_SHADOW }}>
+        <GlowOrb className="w-48 h-48 -top-24 -right-24 bg-primary/6" />
+        <h3 className="text-lg font-bold text-foreground font-display tracking-tight">Account Settings</h3>
         <p className="text-xs text-muted-foreground mt-1 font-sans">Manage your profile, alert preferences, and security</p>
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="rounded bg-card border border-border p-3.5 lg:col-span-1 shadow-linen">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="rounded-2xl surface-card p-3.5 lg:col-span-1" style={{ boxShadow: CARD_SHADOW }}>
           <nav className="flex flex-col gap-1">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
                 <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-                  className={`relative flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium transition-all duration-200 w-full text-left font-sans ${
-                    activeTab === tab.id ? "text-primary-foreground bg-primary shadow-linen" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  className={`relative flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 w-full text-left font-sans ${
+                    activeTab === tab.id ? "text-foreground bg-primary/8" : "text-muted-foreground hover:text-foreground hover:bg-accent/40"
                   }`}>
                   <Icon className="size-4" />{tab.label}
-                  {activeTab === tab.id && <ChevronRight className="size-3.5 ml-auto text-primary-foreground" />}
+                  {activeTab === tab.id && <ChevronRight className="size-3.5 ml-auto text-primary" />}
                 </button>
               )
             })}
             <div className="border-t border-border/50 my-2" />
-            <button className="flex items-center gap-3 px-3.5 py-3 rounded-lg text-sm font-medium text-fin-loss/80 hover:text-fin-loss hover:bg-fin-loss/10 border border-transparent hover:border-fin-loss/20 transition-all duration-200 w-full text-left font-sans">
+            <button className="flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-semibold text-fin-loss/70 hover:text-fin-loss hover:bg-fin-loss/5 transition-all duration-200 w-full text-left font-sans">
               <LogOut className="size-4" />Sign Out
             </button>
           </nav>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="rounded bg-card border border-border p-5 lg:p-7 lg:col-span-3 shadow-linen">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="rounded-2xl surface-card p-5 lg:p-7 lg:col-span-3" style={{ boxShadow: CARD_SHADOW }}>
           <AnimatePresence mode="wait">
             <motion.div key={activeTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
               {activeTab === "profile" && (
                 <div className="flex flex-col gap-6">
                   <div><h4 className="text-sm font-bold text-foreground font-display">Team Information</h4><p className="text-xs text-muted-foreground mt-0.5 font-sans">Manage your organization details</p></div>
                   <div className="flex items-center gap-4">
-                    <div className="size-16 rounded-lg bg-primary flex items-center justify-center shadow-linen"><span className="text-lg font-bold text-primary-foreground font-display">LM</span></div>
+                    <div className="size-16 rounded-2xl bg-primary/15 flex items-center justify-center glow-teal-sm"><span className="text-lg font-bold text-primary font-display">LM</span></div>
                     <div><p className="text-sm font-bold text-foreground font-display">Limira Team 38</p><p className="text-xs text-muted-foreground font-sans">Cornell Tech — Enterprise Plan</p></div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -1172,7 +1180,7 @@ function SettingsSection() {
                     ].map((field, i) => (
                       <div key={i} className="flex flex-col gap-2">
                         <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.06em] font-sans">{field.label}</label>
-                        <div className="flex items-center gap-2.5 bg-muted/30 rounded-lg px-4 py-3 border border-border">
+                        <div className="flex items-center gap-2.5 bg-muted/30 rounded-xl px-4 py-3 border border-border/30">
                           <field.icon className="size-4 text-muted-foreground shrink-0" />
                           <span className="text-sm text-foreground font-sans">{field.value}</span>
                         </div>
@@ -1194,8 +1202,8 @@ function SettingsSection() {
                   ].map((item, i) => (
                     <div key={i} className="flex items-center justify-between py-1">
                       <div><p className="text-sm font-semibold text-foreground font-sans">{item.label}</p><p className="text-xs text-muted-foreground mt-0.5 font-sans">{item.desc}</p></div>
-                      <div className={`w-11 h-6 rounded-full relative cursor-pointer transition-all duration-300 border ${item.enabled ? "bg-primary border-primary" : "bg-muted border-border"}`}>
-                        <div className={`absolute top-0.5 size-5 rounded-full bg-card shadow-linen transition-transform duration-300 ${item.enabled ? "translate-x-5.5" : "translate-x-0.5"}`} />
+                      <div className={`w-11 h-6 rounded-full relative cursor-pointer transition-colors duration-300 ${item.enabled ? "bg-primary" : "bg-muted"}`}>
+                        <div className={`absolute top-0.5 size-5 rounded-full bg-foreground transition-transform duration-300 ${item.enabled ? "translate-x-5.5" : "translate-x-0.5"}`} />
                       </div>
                     </div>
                   ))}
@@ -1210,9 +1218,9 @@ function SettingsSection() {
                     { label: "IP Allowlist", desc: "Restrict access to approved IPs", status: "Configure", statusColor: "text-primary" },
                     { label: "Audit Logs", desc: "Track all data access and exports", status: "View", statusColor: "text-primary" },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
+                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-border/30">
                       <div className="flex items-center gap-3.5">
-                        <div className="size-10 rounded-lg bg-muted flex items-center justify-center border border-border"><Lock className="size-4 text-muted-foreground" /></div>
+                        <div className="size-10 rounded-xl bg-accent/50 flex items-center justify-center"><Lock className="size-4 text-muted-foreground" /></div>
                         <div><p className="text-sm font-semibold text-foreground font-sans">{item.label}</p><p className="text-xs text-muted-foreground mt-0.5 font-sans">{item.desc}</p></div>
                       </div>
                       <span className={`text-xs font-bold ${item.statusColor}`}>{item.status}</span>
@@ -1231,7 +1239,7 @@ function SettingsSection() {
                   ].map((item, i) => {
                     const Icon = item.icon
                     return (
-                      <div key={i} className="flex items-center justify-between p-4 rounded-lg bg-muted/30 border border-border">
+                      <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-border/30">
                         <div className="flex items-center gap-3.5">
                           <Icon className="size-4 text-muted-foreground" />
                           <div><p className="text-sm font-semibold text-foreground font-sans">{item.label}</p><p className="text-xs text-muted-foreground font-sans">{item.desc}</p></div>
@@ -1245,9 +1253,9 @@ function SettingsSection() {
               {activeTab === "billing" && (
                 <div className="flex flex-col gap-6">
                   <div><h4 className="text-sm font-bold text-foreground font-display">Billing & Subscription</h4><p className="text-xs text-muted-foreground mt-0.5 font-sans">Manage your plan and API usage</p></div>
-                  <div className="rounded-lg bg-primary/5 border border-primary/15 p-5 flex items-center justify-between shadow-linen">
+                  <div className="rounded-xl bg-primary/6 border border-primary/15 p-5 flex items-center justify-between glow-teal-sm">
                     <div className="flex items-center gap-4">
-                      <div className="size-12 rounded bg-primary/12 flex items-center justify-center"><Scale className="size-5 text-primary" /></div>
+                      <div className="size-12 rounded-xl bg-primary/12 flex items-center justify-center"><Scale className="size-5 text-primary" /></div>
                       <div><p className="text-sm font-bold text-foreground font-display">Enterprise Plan</p><p className="text-xs text-muted-foreground font-sans">1M API calls/month — Renews Mar 1, 2026</p></div>
                     </div>
                     <button className="text-xs font-bold text-primary hover:underline font-sans">Manage Plan</button>
@@ -1297,66 +1305,80 @@ export default function FinancialAnalyticsDashboard() {
   const activeNav = useMemo(() => NAV_ITEMS.find((n) => n.id === activeSection), [activeSection])
 
   return (
-    <div className="w-full min-h-screen bg-background text-foreground flex flex-col relative grain">
-      {/* Header - White bar on linen */}
-      <header className="bg-card shadow-linen sticky top-0 z-30 relative">
-        <div className="w-full px-6 lg:px-10 xl:px-14">
+    <div className="w-full min-h-screen bg-background text-foreground flex flex-col relative" style={{ boxShadow: CARD_SHADOW }}>
+      {/* Atmospheric mesh gradient background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full opacity-[0.03] blur-[120px] animate-float" style={{ background: C.teal }} />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full opacity-[0.02] blur-[100px] animate-float" style={{ background: C.azure, animationDelay: "3s" }} />
+      </div>
+
+      {/* Header */}
+      <header className="border-b border-border/60 bg-card/60 backdrop-blur-xl sticky top-0 z-30 relative">
+        <div className="w-full px-5 lg:px-10 xl:px-14">
           <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-6">
-              <span className="text-2xl font-normal tracking-wide text-foreground font-display">LIMIRA</span>
-              <div className="hidden md:flex items-center gap-2 text-[11px] text-muted-foreground font-sans tracking-[0.12em] uppercase">
-                <span>Legal Intelligence</span>
-                <span className="text-border">|</span>
-                <span className="text-foreground font-medium">{activeNav?.label}</span>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2.5">
+                <div className="size-8 rounded-xl bg-primary/12 flex items-center justify-center glow-teal-sm">
+                  <Scale className="size-4 text-primary" />
+                </div>
+                <span className="text-base font-extrabold tracking-tight text-foreground font-display">Limira</span>
+              </div>
+              <div className="hidden md:flex items-center gap-1 ml-3 text-xs text-muted-foreground font-sans">
+                <span>Social Listening</span>
+                <ChevronRight className="size-3 text-muted-foreground/50" />
+                <span className="text-foreground font-semibold">{activeNav?.label}</span>
               </div>
             </div>
-            <div className="flex items-center gap-1">
-              <button className="p-2.5 rounded hover:bg-muted transition-colors" aria-label="Search">
+            <div className="flex items-center gap-1.5">
+              <button className="p-2.5 rounded-xl hover:bg-accent/50 transition-all duration-200" aria-label="Search">
                 <Search className="size-4 text-muted-foreground" />
               </button>
               <div className="relative">
                 <button
                   onClick={() => setNotificationsOpen((prev) => !prev)}
-                  className="p-2.5 rounded hover:bg-muted transition-colors relative"
+                  className="p-2.5 rounded-xl hover:bg-accent/50 transition-all duration-200 relative"
                   aria-label="Notifications" aria-expanded={notificationsOpen}
                 >
                   <Bell className="size-4 text-muted-foreground" />
                   {unreadCount > 0 && (
                     <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} transition={SPRING}
-                      className="absolute -top-0.5 -right-0.5 size-4 rounded-full bg-primary text-primary-foreground text-[9px] font-medium flex items-center justify-center font-mono">
+                      className="absolute -top-0.5 -right-0.5 size-5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center font-mono">
                       {unreadCount}
                     </motion.span>
                   )}
                 </button>
                 <NotificationPanel isOpen={notificationsOpen} onClose={() => setNotificationsOpen(false)} items={notifItems} onMarkRead={handleMarkRead} onMarkAllRead={handleMarkAllRead} />
               </div>
-              <button className="p-2.5 rounded hover:bg-muted transition-colors" aria-label="Settings" onClick={() => handleNavigation("settings")}>
+              <button className="p-2.5 rounded-xl hover:bg-accent/50 transition-all duration-200" aria-label="Settings" onClick={() => handleNavigation("settings")}>
                 <Settings className="size-4 text-muted-foreground" />
               </button>
-              <div className="size-8 rounded bg-primary flex items-center justify-center ml-2 cursor-pointer hover:opacity-90 transition-opacity">
-                <span className="text-[10px] font-semibold text-primary-foreground font-sans">LM</span>
+              <div className="size-9 rounded-xl bg-primary/12 flex items-center justify-center ml-1.5 glow-teal-sm cursor-pointer hover:bg-primary/18 transition-colors">
+                <span className="text-xs font-bold text-primary font-display">T38</span>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Navigation - White tabs bar */}
-      <nav className="bg-card border-b border-border shadow-sm sticky top-16 z-20 relative">
-        <div className="w-full px-6 lg:px-10 xl:px-14">
-          <div className="flex items-center gap-1 overflow-x-auto py-2 scrollbar-none">
+      {/* Navigation */}
+      <nav className="border-b border-border/40 bg-card/40 backdrop-blur-xl sticky top-16 z-20 relative">
+        <div className="w-full px-5 lg:px-10 xl:px-14">
+          <div className="flex items-center gap-0.5 overflow-x-auto py-1.5 -mb-px scrollbar-none">
             {NAV_ITEMS.map((item) => {
               const isActive = item.id === activeSection
               const Icon = item.icon
               return (
                 <button key={item.id} onClick={() => handleNavigation(item.id)}
-                  className={`relative flex items-center gap-2 px-4 py-2 text-[11px] font-medium tracking-[0.08em] uppercase transition-all duration-200 whitespace-nowrap shrink-0 font-sans rounded ${
-                    isActive ? "text-primary-foreground bg-primary" : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  className={`relative flex items-center gap-2 px-4 py-2.5 text-[13px] font-semibold rounded-xl transition-all duration-250 whitespace-nowrap shrink-0 font-sans ${
+                    isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-accent/30"
                   }`}
                   aria-current={isActive ? "page" : undefined}
                 >
-                  <Icon className="size-3.5" />
+                  <Icon className="size-4" />
                   <span>{item.label}</span>
+                  {isActive && (
+                    <motion.div layoutId="nav-indicator" className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full bg-primary" style={{ boxShadow: `0 0 8px 2px oklch(0.78 0.16 182 / 0.3)` }} transition={SPRING} />
+                  )}
                 </button>
               )
             })}
@@ -1365,7 +1387,7 @@ export default function FinancialAnalyticsDashboard() {
       </nav>
 
       {/* Content */}
-      <main className="w-full px-6 lg:px-10 xl:px-14 py-8 lg:py-10 flex-1 relative z-10">
+      <main className="w-full px-5 lg:px-10 xl:px-14 py-6 lg:py-8 flex-1 relative z-10">
         <AnimatePresence mode="wait">
           <motion.div key={activeSection}
             initial={{ opacity: 0, y: 12 }}
@@ -1378,19 +1400,15 @@ export default function FinancialAnalyticsDashboard() {
         </AnimatePresence>
       </main>
 
-      {/* Footer - White bar */}
-      <footer className="bg-card shadow-linen mt-auto relative z-10">
-        <div className="w-full px-6 lg:px-10 xl:px-14 py-4">
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground font-sans tracking-[0.1em] uppercase">
-            <div className="flex items-center gap-5">
-              <div className="flex items-center gap-2">
-                <div className="size-1.5 rounded-full bg-fin-gain" />
-                <span className="font-medium">Operational</span>
-              </div>
-              <span className="text-border hidden sm:inline">|</span>
-              <span className="hidden sm:inline">6 Sources</span>
+      {/* Footer */}
+      <footer className="border-t border-border/40 mt-auto relative z-10">
+        <div className="w-full px-5 lg:px-10 xl:px-14 py-4">
+          <div className="flex items-center justify-between text-[11px] text-muted-foreground font-sans">
+            <div className="flex items-center gap-2">
+              <div className="size-2 rounded-full bg-fin-gain animate-pulse-soft" />
+              <span className="font-medium">All pipelines operational</span>
             </div>
-            <span className="font-mono tracking-normal normal-case text-muted-foreground">Feb 20, 2026 — 08:15 UTC</span>
+            <span className="font-mono text-muted-foreground/60">Last sync: Feb 20, 2026 — 08:15 UTC</span>
           </div>
         </div>
       </footer>
