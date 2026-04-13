@@ -1,15 +1,15 @@
 import type { Metadata } from 'next'
-import { DM_Sans, JetBrains_Mono, Playfair_Display } from 'next/font/google'
+import { DM_Sans, JetBrains_Mono, Outfit } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 const _dmSans = DM_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"] })
 const _jetbrains = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500", "600", "700"] })
-const _playfair = Playfair_Display({ subsets: ["latin"], weight: ["400", "500", "600", "700"] })
+const _outfit = Outfit({ subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] })
 
 export const metadata: Metadata = {
-  title: 'Limira — Legal Market Intelligence',
-  description: 'AI-powered social listening platform for legal market intelligence. Real-time case detection, anomaly alerts, and media recommendations.',
+  title: 'Meridian — Financial Analytics Dashboard',
+  description: 'Professional financial analytics dashboard with portfolio tracking, performance metrics, risk analysis, and market overview.',
   generator: 'v0.app',
   icons: {
     icon: [
